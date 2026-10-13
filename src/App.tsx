@@ -7,6 +7,8 @@ import { InfographicCanvas } from './components/InfographicCanvas';
 import { LiveEditorDrawer } from './components/LiveEditorDrawer';
 import { ExportModal } from './components/ExportModal';
 import { ShareModal } from './components/ShareModal';
+import { TemplateGallery } from './components/TemplateGallery';
+import { TemplateItem } from './data/templateGalleryData';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function App() {
@@ -15,11 +17,13 @@ export default function App() {
   const [isAiRefining, setIsAiRefining] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [currentPrompt, setCurrentPrompt] = useState<string>('');
 
   // Modal / Drawer states
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
 
   // Check URL query parameters for ?share=share_xyz on load
   useEffect(() => {
@@ -118,10 +122,18 @@ export default function App() {
     }
   };
 
+  const handleSelectTemplate = (template: TemplateItem) => {
+    setData(template.data);
+    setCurrentPrompt(template.starterPrompt);
+    setIsTemplateGalleryOpen(false);
+    showToast(`Loaded template: ${template.title}`);
+  };
+
   return (
     <div className="min-h-screen bg-[#101012] text-white flex flex-col font-sans selection:bg-zinc-800 selection:text-white">
       {/* Minimal Top Header */}
       <Header
+        onOpenTemplates={() => setIsTemplateGalleryOpen(true)}
         onOpenEditor={() => setIsEditorOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
         onOpenShare={() => setIsShareOpen(true)}
@@ -150,6 +162,8 @@ export default function App() {
           onGenerate={handleGenerate}
           isLoading={isLoading}
           onSelectSample={handleSelectSample}
+          onOpenTemplates={() => setIsTemplateGalleryOpen(true)}
+          currentPrompt={currentPrompt}
         />
 
         {/* Loading Spinner State */}
@@ -165,6 +179,14 @@ export default function App() {
         {/* Hero Interactive Card */}
         {!isLoading && <InfographicCanvas data={data} />}
       </main>
+
+      {/* Template Gallery Modal */}
+      <TemplateGallery
+        isOpen={isTemplateGalleryOpen}
+        onClose={() => setIsTemplateGalleryOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+        currentTemplateId={data.id}
+      />
 
       {/* Slide-over Live Editor Drawer */}
       <LiveEditorDrawer

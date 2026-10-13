@@ -1,13 +1,15 @@
 import React from 'react';
-import { Share2, Download, Sliders, Sparkles } from 'lucide-react';
+import { Share2, Download, Sliders, Sparkles, LayoutTemplate } from 'lucide-react';
 
 interface Props {
+  onOpenTemplates: () => void;
   onOpenEditor: () => void;
   onOpenExport: () => void;
   onOpenShare: () => void;
 }
 
 export const Header: React.FC<Props> = ({
+  onOpenTemplates,
   onOpenEditor,
   onOpenExport,
   onOpenShare,
@@ -21,12 +23,23 @@ export const Header: React.FC<Props> = ({
             <Sparkles className="w-3.5 h-3.5 text-zinc-300" />
           </div>
           <span className="font-bold text-sm tracking-tight text-white">
-            Infograph<span className="text-zinc-400 font-normal">AI</span>
+            Visualizer<span className="text-zinc-400 font-normal">AI</span>
           </span>
         </div>
 
         {/* Quiet Minimal Action Buttons */}
         <div className="flex items-center gap-2 text-xs">
+          <button
+            onClick={onOpenTemplates}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-700/80 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-100 font-medium transition-colors cursor-pointer shadow-xs"
+          >
+            <LayoutTemplate className="w-3.5 h-3.5 text-zinc-300" />
+            <span>Templates</span>
+            <span className="text-[10px] font-mono bg-zinc-900/80 text-zinc-400 px-1.5 py-0.2 rounded-md ml-0.5">
+              14
+            </span>
+          </button>
+
           <button
             onClick={onOpenEditor}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-[#161619] hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"

@@ -15,7 +15,7 @@ export function generateReactComponentCode(data: MinimalInfographicData): string
   return `import React from 'react';
 
 // Infographic Component: ${data.title}
-// Generated with InfographAI (Gemini Interactive Infographics)
+// Generated with VisualizerAI (Interactive Systems & Data Visualizer)
 
 export default function ${compName}() {
   const cardData = ${dataString};

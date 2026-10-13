@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MinimalInfographicData } from '../../types/infographic';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Eye, Info } from 'lucide-react';
+import {
+  resolveChartAnnotation,
+  getAllChartMilestones,
+  ResolvedAnnotation,
+} from '../../utils/annotationEngine';
+import {
+  DynamicCalloutAnnotation,
+  ChartAnnotationPin,
+} from '../DynamicCalloutAnnotation';
 
 interface Props {
   data: MinimalInfographicData;
@@ -13,10 +22,30 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
   );
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [showAnnotations, setShowAnnotations] = useState(true);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [containerDims, setContainerDims] = useState<{ width: number; height: number }>({
+    width: 800,
+    height: 360,
+  });
 
   const activeScenario =
     switcher?.scenarios.find((s) => s.id === activeScenarioId) ||
     switcher?.scenarios?.[0];
+
+  useEffect(() => {
+    const updateDims = () => {
+      if (chartContainerRef.current) {
+        setContainerDims({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        });
+      }
+    };
+    updateDims();
+    window.addEventListener('resize', updateDims);
+    return () => window.removeEventListener('resize', updateDims);
+  }, []);
 
   if (!activeScenario) {
     return <div className="text-zinc-500 text-sm">No scenario data found</div>;
@@ -25,6 +54,18 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
   const { metrics, chartData, insightHighlight } = activeScenario;
   const labels = chartData.labels || [];
   const series = chartData.series || [];
+  const predefinedAnnotations = chartData.annotations || data.annotations;
+
+  // Calculate dynamic maximum value across all series data points
+  let maxDataVal = 100;
+  series.forEach((s) => {
+    s.data.forEach((v) => {
+      if (v > maxDataVal) maxDataVal = v;
+    });
+  });
+  // Nice round ceiling (e.g., 100, 125, 150, 175, 200)
+  const roundCeil = Math.ceil(maxDataVal / 25) * 25;
+  const gridSteps = [roundCeil, roundCeil * 0.75, roundCeil * 0.5, roundCeil * 0.25, 0];
 
   // Dimensions for SVG Area Chart
   const svgWidth = 840;
@@ -42,8 +83,18 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
   };
 
   const getY = (val: number) => {
-    // Range 0 to 100%
-    return padBottom - (Math.max(0, Math.min(100, val)) / 100) * plotHeight;
+    const clamped = Math.max(0, val);
+    return padBottom - (clamped / roundCeil) * plotHeight;
+  };
+
+  // Convert SVG coordinates to container CSS pixel coordinates
+  const svgToContainer = (svgX: number, svgY: number) => {
+    const scaleX = containerDims.width / svgWidth;
+    const scaleY = containerDims.height / svgHeight;
+    return {
+      x: svgX * scaleX,
+      y: svgY * scaleY,
+    };
   };
 
   // Smooth spline path builder
@@ -67,51 +118,79 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
     return path;
   };
 
-  // Series 0: Glycogen curve (bottom area)
-  // Series 1: Fat Oxidation (top background fill)
-  const glySeries = series[0] || { name: 'Glycogen Burn (%)', color: '#60a5fa', data: [] };
-  const fatSeries = series[1] || { name: 'Fat Oxidation (%)', color: '#eab308', data: [] };
+  // Determine if this is a partitioned substrate card (like cardio timing where series sum to 100%)
+  const isPartitionCard = data.id === 'sample-cardio-timing' && series.length === 2;
 
-  const glyPoints = labels.map((_, i) => ({ x: getX(i), y: getY(glySeries.data[i] ?? 0) }));
-  const glyLinePath = buildSmoothPath(glyPoints);
+  // Compute all key milestones and anomalies for pin indicators
+  const keyMilestones = getAllChartMilestones(
+    labels,
+    series,
+    predefinedAnnotations,
+    activeScenario.label
+  );
 
-  const firstPt = glyPoints[0] || { x: padLeft, y: padBottom };
-  const lastPt = glyPoints[glyPoints.length - 1] || { x: padLeft + plotWidth, y: padBottom };
-
-  // Bottom Area (Glycogen)
-  const glyAreaPath = `${glyLinePath} L ${lastPt.x} ${padBottom} L ${firstPt.x} ${padBottom} Z`;
-
-  // Top Area (Fat Oxidation - fill between glycogen line and 100% top ceiling)
-  const fatAreaPath = `${glyLinePath} L ${lastPt.x} ${padTop} L ${firstPt.x} ${padTop} Z`;
+  // Active annotation for hovered point
+  const activeAnnotation: ResolvedAnnotation | null =
+    hoveredIdx !== null
+      ? resolveChartAnnotation({
+          labels,
+          series,
+          pointIndex: hoveredIdx,
+          predefinedAnnotations,
+          contextTitle: activeScenario.label,
+          contextSubtitle: data.subtitle,
+          unit: '%',
+        })
+      : null;
 
   return (
     <div className="w-full flex flex-col gap-6">
-      {/* Sequence Switcher Pill Container */}
-      {switcher && switcher.scenarios.length > 1 && (
-        <div className="flex flex-wrap items-center gap-3 p-2 rounded-2xl bg-[#161619] border border-zinc-800/80 w-fit">
-          <span className="text-xs font-semibold text-zinc-400 pl-3">
-            {switcher.switchLabel}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {switcher.scenarios.map((scen) => {
-              const isActive = scen.id === activeScenarioId;
-              return (
-                <button
-                  key={scen.id}
-                  onClick={() => setActiveScenarioId(scen.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-[#222227] text-white shadow-sm border border-zinc-700/60'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
-                  }`}
-                >
-                  {scen.label}
-                </button>
-              );
-            })}
+      {/* Sequence Switcher Pill Container + Callout Annotations Toggle */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {switcher && switcher.scenarios.length > 1 && (
+          <div className="flex flex-wrap items-center gap-3 p-1.5 rounded-2xl bg-[#161619] border border-zinc-800/80 w-fit">
+            <span className="text-xs font-semibold text-zinc-400 pl-3">
+              {switcher.switchLabel}
+            </span>
+            <div className="flex items-center gap-1.5">
+              {switcher.scenarios.map((scen) => {
+                const isActive = scen.id === activeScenarioId;
+                return (
+                  <button
+                    key={scen.id}
+                    onClick={() => setActiveScenarioId(scen.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[#222227] text-white shadow-sm border border-zinc-700/60'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                    }`}
+                  >
+                    {scen.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Dynamic Annotations Indicator Badge / Toggle */}
+        <button
+          onClick={() => setShowAnnotations(!showAnnotations)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
+            showAnnotations
+              ? 'bg-blue-950/30 border-blue-500/50 text-sky-300 shadow-sm'
+              : 'bg-[#161619] border-zinc-800 text-zinc-400 hover:text-zinc-200'
+          }`}
+          title="Toggle dynamic callout annotations and anomalies"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+          <span>
+            {showAnnotations
+              ? `Context Callouts (${keyMilestones.length} insights)`
+              : 'Callouts Muted'}
+          </span>
+        </button>
+      </div>
 
       {/* 3 Minimal KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -137,7 +216,7 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
 
       {/* Area Chart Container */}
       <div className="relative w-full rounded-2xl bg-[#161619] border border-zinc-800/80 p-5 sm:p-6 overflow-hidden">
-        <div className="relative w-full h-80 sm:h-96">
+        <div ref={chartContainerRef} className="relative w-full h-80 sm:h-96">
           <svg
             className="w-full h-full overflow-visible"
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -145,21 +224,28 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
             onMouseLeave={() => setHoveredIdx(null)}
           >
             <defs>
-              {/* Glycogen Soft Blue Gradient */}
-              <linearGradient id="glycogen-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.65" />
-                <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.45" />
-              </linearGradient>
+              {series.map((s, sIdx) => {
+                const color = s.color || (sIdx === 0 ? '#38bdf8' : '#eab308');
+                return (
+                  <linearGradient key={`grad-${sIdx}`} id={`area-grad-${sIdx}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.55" />
+                    <stop offset="85%" stopColor={color} stopOpacity="0.1" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+                  </linearGradient>
+                );
+              })}
 
-              {/* Fat Soft Olive/Khaki Gradient */}
-              <linearGradient id="fat-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#85754e" stopOpacity="0.65" />
-                <stop offset="100%" stopColor="#4a422b" stopOpacity="0.5" />
-              </linearGradient>
+              {/* Special complementary top fill for cardio partition */}
+              {isPartitionCard && (
+                <linearGradient id="partition-top-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#85754e" stopOpacity="0.65" />
+                  <stop offset="100%" stopColor="#4a422b" stopOpacity="0.5" />
+                </linearGradient>
+              )}
             </defs>
 
-            {/* Horizontal Grid lines (0%, 25%, 50%, 75%, 100%) */}
-            {[100, 75, 50, 25, 0].map((pct) => {
+            {/* Horizontal Grid lines */}
+            {gridSteps.map((pct) => {
               const y = getY(pct);
               return (
                 <g key={`grid-${pct}`}>
@@ -186,36 +272,103 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
               );
             })}
 
-            {/* Top Area: Fat Oxidation Fill */}
-            <path d={fatAreaPath} fill="url(#fat-grad)" />
+            {/* If Cardio Partition: render top complementary area and bottom curve */}
+            {isPartitionCard && series.length >= 2 ? (
+              <>
+                {(() => {
+                  const pts = labels.map((_, i) => ({ x: getX(i), y: getY(series[0].data[i] ?? 0) }));
+                  const line = buildSmoothPath(pts);
+                  const firstPt = pts[0] || { x: padLeft, y: padBottom };
+                  const lastPt = pts[pts.length - 1] || { x: padLeft + plotWidth, y: padBottom };
 
-            {/* Bottom Area: Glycogen Burn Fill */}
-            <path d={glyAreaPath} fill="url(#glycogen-grad)" />
+                  const topPath = `${line} L ${lastPt.x} ${padTop} L ${firstPt.x} ${padTop} Z`;
+                  const bottomPath = `${line} L ${lastPt.x} ${padBottom} L ${firstPt.x} ${padBottom} Z`;
 
-            {/* Boundary Curve Line */}
-            <path
-              d={glyLinePath}
-              fill="none"
-              stroke="#7dd3fc"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
+                  return (
+                    <g>
+                      <path d={topPath} fill="url(#partition-top-grad)" />
+                      <path d={bottomPath} fill="url(#area-grad-0)" />
+                      <path d={line} fill="none" stroke={series[0].color || '#7dd3fc'} strokeWidth="2.5" strokeLinecap="round" />
+                    </g>
+                  );
+                })()}
+              </>
+            ) : (
+              /* Standard dynamic area series (e.g. SaaS expansion, Churn, Edge AI) */
+              series.map((s, sIdx) => {
+                const pts = labels.map((_, i) => ({ x: getX(i), y: getY(s.data[i] ?? 0) }));
+                const line = buildSmoothPath(pts);
+                const firstPt = pts[0] || { x: padLeft, y: padBottom };
+                const lastPt = pts[pts.length - 1] || { x: padLeft + plotWidth, y: padBottom };
+                const areaPath = `${line} L ${lastPt.x} ${padBottom} L ${firstPt.x} ${padBottom} Z`;
+
+                return (
+                  <g key={`series-layer-${sIdx}`}>
+                    <path d={areaPath} fill={`url(#area-grad-${sIdx})`} />
+                    <path
+                      d={line}
+                      fill="none"
+                      stroke={s.color || '#38bdf8'}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  </g>
+                );
+              })
+            )}
+
+            {/* Key Milestone & Anomaly Pins (rendered on curve) */}
+            {showAnnotations &&
+              keyMilestones.map((m) => {
+                const primaryVal = series[0]?.data[m.pointIndex] ?? 50;
+                const pinX = getX(m.pointIndex);
+                const pinY = getY(primaryVal);
+                const isHovered = hoveredIdx === m.pointIndex;
+
+                return (
+                  <g
+                    key={`milestone-pin-${m.pointIndex}`}
+                    onClick={() => setHoveredIdx(m.pointIndex)}
+                  >
+                    <ChartAnnotationPin
+                      cx={pinX}
+                      cy={pinY}
+                      color={m.color}
+                      isAnomaly={m.isAnomaly}
+                      type={m.type}
+                      isHovered={isHovered}
+                    />
+                  </g>
+                );
+              })}
 
             {/* Active Crosshair Guide Line on hover */}
             {hoveredIdx !== null && (
-              <line
-                x1={getX(hoveredIdx)}
-                y1={padTop}
-                x2={getX(hoveredIdx)}
-                y2={padBottom}
-                stroke="#e0f2fe"
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-                opacity="0.8"
-              />
+              <g>
+                <line
+                  x1={getX(hoveredIdx)}
+                  y1={padTop}
+                  x2={getX(hoveredIdx)}
+                  y2={padBottom}
+                  stroke={activeAnnotation?.color || '#e0f2fe'}
+                  strokeWidth="1.5"
+                  strokeDasharray="4 4"
+                  opacity="0.8"
+                />
+                {/* Active node dot on primary series */}
+                <circle
+                  cx={getX(hoveredIdx)}
+                  cy={getY(series[0]?.data[hoveredIdx] ?? 0)}
+                  r="6"
+                  fill="#161619"
+                  stroke={activeAnnotation?.color || '#38bdf8'}
+                  strokeWidth="3"
+                  className="filter drop-shadow"
+                />
+              </g>
             )}
 
-            {/* X-axis time marks */}
+            {/* X-axis marks */}
             {labels.map((lbl, idx) => {
               const x = getX(idx);
               const isHovered = hoveredIdx === idx;
@@ -248,48 +401,63 @@ export const ScenarioAreaCard: React.FC<Props> = ({ data }) => {
             })}
           </svg>
 
-          {/* Interactive Hover Tooltip */}
-          {hoveredIdx !== null && (
-            <div
-              className="absolute top-3 right-4 px-3.5 py-2 rounded-xl bg-[#202026]/95 border border-zinc-700/80 text-xs shadow-2xl backdrop-blur-md pointer-events-none"
-            >
-              <div className="font-semibold text-zinc-300 font-mono pb-1 border-b border-zinc-800">
-                Timeline: {labels[hoveredIdx]}
-              </div>
-              <div className="flex flex-col gap-1 mt-1.5 font-mono text-xs">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1.5 text-sky-300">
-                    <span className="w-2 h-2 rounded-full bg-sky-400" />
-                    Glycogen Burn:
-                  </span>
-                  <span className="font-bold text-white">
-                    {glySeries.data[hoveredIdx]}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1.5 text-amber-300">
-                    <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                    Fat Oxidation:
-                  </span>
-                  <span className="font-bold text-white">
-                    {fatSeries.data[hoveredIdx]}%
-                  </span>
-                </div>
-              </div>
-            </div>
+          {/* Dynamic Callout Annotation (Context-Aware Explanations on Hover) */}
+          {showAnnotations && activeAnnotation && hoveredIdx !== null && (
+            (() => {
+              const primaryVal = series[0]?.data[hoveredIdx] ?? 50;
+              const anchor = svgToContainer(getX(hoveredIdx), getY(primaryVal));
+              return (
+                <DynamicCalloutAnnotation
+                  annotation={activeAnnotation}
+                  timelineLabel={labels[hoveredIdx]}
+                  x={anchor.x}
+                  y={anchor.y}
+                  containerWidth={containerDims.width}
+                  containerHeight={containerDims.height}
+                />
+              );
+            })()
           )}
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-zinc-800/80 text-xs font-medium">
-          <div className="flex items-center gap-2 text-zinc-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-            <span>{glySeries.name}</span>
+        {/* Dynamic Legend + Milestone Chips */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-zinc-800/80 text-xs">
+          <div className="flex flex-wrap items-center gap-6 font-medium">
+            {series.map((s, sIdx) => {
+              const color = s.color || (sIdx === 0 ? '#60a5fa' : '#eab308');
+              return (
+                <div key={sIdx} className="flex items-center gap-2 text-zinc-300">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+                  <span>{s.name}</span>
+                </div>
+              );
+            })}
           </div>
-          <div className="flex items-center gap-2 text-zinc-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-            <span>{fatSeries.name}</span>
-          </div>
+
+          {/* Anomaly / Milestone Quick Jump Chips */}
+          {keyMilestones.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-zinc-500 font-mono">Highlights:</span>
+              {keyMilestones.slice(0, 3).map((m) => (
+                <button
+                  key={m.pointIndex}
+                  onClick={() => setHoveredIdx(m.pointIndex)}
+                  onMouseEnter={() => setHoveredIdx(m.pointIndex)}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-medium border transition-all cursor-pointer ${
+                    hoveredIdx === m.pointIndex
+                      ? 'bg-zinc-800 text-white border-zinc-600'
+                      : 'bg-[#1a1a20] text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700'
+                  }`}
+                  style={{
+                    color: hoveredIdx === m.pointIndex ? m.color : undefined,
+                  }}
+                >
+                  <span className="mr-1">{m.tag.split(' ')[0]}</span>
+                  <span>{labels[m.pointIndex]}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

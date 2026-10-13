@@ -1,81 +1,146 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MinimalInfographicData } from '../../types/infographic';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
+import {
+  resolveChartAnnotation,
+  getAllChartMilestones,
+  ResolvedAnnotation,
+} from '../../utils/annotationEngine';
+import {
+  DynamicCalloutAnnotation,
+  ChartAnnotationPin,
+} from '../DynamicCalloutAnnotation';
 
 interface Props {
   data: MinimalInfographicData;
 }
 
 export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
-  const config = data.sliderConfig || {
-    label: 'Zone 2 Cardio Days / Week',
-    min: 1,
-    max: 7,
-    step: 1,
-    defaultValue: 5,
-    unit: 'Days',
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    liftingBase: [75, 75, 82, 0, 75, 70, 0],
-    metricFormulas: { cnsBase: 300, fatOxBase: 75 },
-  };
-
-  const [sliderVal, setSliderVal] = useState<number>(data.currentSliderValue || config.defaultValue || 5);
+  const config = data.sliderConfig;
+  const [sliderVal, setSliderVal] = useState<number>(
+    data.currentSliderValue || config?.defaultValue || 3
+  );
   const [hoveredDayIdx, setHoveredDayIdx] = useState<number | null>(null);
-
-  const days = config.labels;
-  const liftingStress = config.liftingBase;
-
-  // Determine which days have cardio based on slider value
-  // 1 day: Sun
-  // 2 days: Thu, Sun
-  // 3 days: Tue, Thu, Sun
-  // 4 days: Tue, Thu, Sat, Sun
-  // 5 days: Mon, Tue, Thu, Fri, Sun
-  // 6 days: Mon, Tue, Wed, Thu, Fri, Sun
-  // 7 days: all 7 days
-  const cardioDayMap: Record<number, number[]> = {
-    1: [6],
-    2: [3, 6],
-    3: [1, 3, 6],
-    4: [1, 3, 5, 6],
-    5: [0, 1, 3, 4, 6],
-    6: [0, 1, 2, 3, 4, 6],
-    7: [0, 1, 2, 3, 4, 5, 6],
-  };
-
-  const activeCardioIndices = cardioDayMap[sliderVal] || [0, 1, 3, 4, 6];
-
-  // Cardio stress per day: 15 pts on cardio days
-  const cardioStress = days.map((_, i) => (activeCardioIndices.includes(i) ? 15 : 0));
-
-  // Fat oxidation stimulus per day: higher on cardio days, lower on pure lift or rest days
-  const fatOxStimulus = days.map((_, i) => {
-    const hasCardio = activeCardioIndices.includes(i);
-    const hasLift = liftingStress[i] > 0;
-    if (hasCardio && hasLift) return 76;
-    if (hasCardio && !hasLift) return 74;
-    return 8; // minimal stimulus
+  const [showAnnotations, setShowAnnotations] = useState<boolean>(true);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [containerDims, setContainerDims] = useState<{ width: number; height: number }>({
+    width: 800,
+    height: 320,
   });
 
-  // Calculate high-level KPIs
-  const totalLiftingCns = liftingStress.reduce((a, b) => a + b, 0);
-  const totalCardioCns = activeCardioIndices.length * 15;
-  const totalCns = totalLiftingCns + totalCardioCns; // ~450 pts at 5 days
-  const fatOxScore = activeCardioIndices.length * 75; // 375 pts at 5 days
+  useEffect(() => {
+    const updateDims = () => {
+      if (chartContainerRef.current) {
+        setContainerDims({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        });
+      }
+    };
+    updateDims();
+    window.addEventListener('resize', updateDims);
+    return () => window.removeEventListener('resize', updateDims);
+  }, []);
 
-  let systemicBalance = 'Moderate High';
-  let balanceColor = '#facc15'; // yellow/amber
+  if (!config) {
+    return (
+      <div className="text-zinc-500 text-sm">
+        No dynamic slider configuration provided
+      </div>
+    );
+  }
+
+  const days = config.labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // Domain-flexible series labels and colors
+  const seriesNames = {
+    primaryBar: config.seriesNames?.primaryBar || 'Baseline Volume',
+    primaryColor: config.seriesNames?.primaryColor || '#60a5fa',
+    accentBar: config.seriesNames?.accentBar || 'Dynamic Allocation',
+    accentColor: config.seriesNames?.accentColor || '#f59e0b',
+    lineCurve: config.seriesNames?.lineCurve || 'Systemic Impact',
+    lineColor: config.seriesNames?.lineColor || '#ec4899',
+    unit: config.seriesNames?.unit || config.unit || 'units',
+  };
+
+  // Primary baseline values
+  const primaryValues = config.primaryBase || config.liftingBase || [75, 0, 80, 0, 75, 85, 0];
+
+  // Map slider value to active days
+  const stepDaysMapping: Record<number, number[]> = {
+    0: [],
+    1: [1],
+    2: [1, 4],
+    3: [1, 3, 5],
+    4: [0, 2, 4, 6],
+    5: [0, 1, 3, 4, 6],
+    6: [0, 1, 2, 4, 5, 6],
+    7: [0, 1, 2, 3, 4, 5, 6],
+  };
+  const activeStepIndices = stepDaysMapping[Math.min(sliderVal, 7)] || [1, 3, 5];
+
+  // Accent values
+  const accentValues = config.accentBase || [0, 18, 0, 18, 0, 18, 0];
+
+  // Calculate dynamic curve line values for each day
+  const lineValues = days.map((_, i) => {
+    const hasAccent = activeStepIndices.includes(i);
+    const prim = primaryValues[i] || 0;
+    const accent = hasAccent ? (accentValues[i] || 18) : 0;
+    // Calculate composite intensity
+    const composite = prim * 0.45 + accent * 2.2;
+    return Math.min(100, Math.round(composite));
+  });
+
+  // Calculate composite cumulative KPI metric
+  const kpi1CalculatedValue = Math.min(
+    100,
+    Math.round(
+      (primaryValues.reduce((a, b) => a + b, 0) / 400) * 45 +
+        (activeStepIndices.length / 7) * 40
+    )
+  );
+
+  // Dynamic KPI Labels
+  const kpiLabels = {
+    kpi1Label: config.kpiLabels?.kpi1Label || 'Cumulative Load',
+    kpi1Unit: config.kpiLabels?.kpi1Unit || '%',
+    kpi1Subtext:
+      config.kpiLabels?.kpi1Subtext ||
+      `${sliderVal} ${config.unit} active setting`,
+    kpi2Label: config.kpiLabels?.kpi2Label || 'Utilization Index',
+    kpi2Unit: config.kpiLabels?.kpi2Unit || (seriesNames.unit === 'GWh' ? 'GWh' : 'pts'),
+    kpi2Subtext:
+      config.kpiLabels?.kpi2Subtext ||
+      `${activeStepIndices.length} active allocation stages`,
+    kpi3Label: config.kpiLabels?.kpi3Label || 'System Balance',
+    kpi3Subtext:
+      config.kpiLabels?.kpi3Subtext || 'Real-time operating threshold',
+  };
+
+  // KPI 2 value calculation
+  const kpi2CalculatedValue = config.metricFormulas?.fatOxBase
+    ? activeStepIndices.length * config.metricFormulas.fatOxBase
+    : activeStepIndices.length * 75;
+
+  // System balance status calculation
+  let balanceStatus = 'Optimal Balance';
+  let balanceColor = '#34d399';
   if (sliderVal <= 2) {
-    systemicBalance = 'Low / Recovery Oriented';
+    balanceStatus =
+      config.kpiLabels?.balanceThresholds?.low || 'Low Allocation / Minimal Strain';
     balanceColor = '#38bdf8';
   } else if (sliderVal <= 4) {
-    systemicBalance = 'Optimal Adaptive Range';
+    balanceStatus =
+      config.kpiLabels?.balanceThresholds?.mid || 'Optimal Adaptive Balance';
     balanceColor = '#34d399';
   } else if (sliderVal === 5) {
-    systemicBalance = 'Moderate High';
+    balanceStatus =
+      config.kpiLabels?.balanceThresholds?.mid || 'Moderate High Capacity';
     balanceColor = '#facc15';
   } else {
-    systemicBalance = 'High CNS Strain / Peak Block';
+    balanceStatus =
+      config.kpiLabels?.balanceThresholds?.high || 'Peak Load / High Strain';
     balanceColor = '#f87171';
   }
 
@@ -94,12 +159,21 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
   };
 
   const getY = (val: number) => {
-    // 0 to 100
     return padBottom - (val / 100) * plotHeight;
   };
 
-  // Build smooth spline for fat oxidation stimulus line
-  const splinePoints = days.map((_, i) => ({ x: getX(i), y: getY(fatOxStimulus[i]) }));
+  // Convert SVG coordinate to container pixel coordinate
+  const svgToContainer = (svgX: number, svgY: number) => {
+    const scaleX = containerDims.width / svgWidth;
+    const scaleY = containerDims.height / svgHeight;
+    return {
+      x: svgX * scaleX,
+      y: svgY * scaleY,
+    };
+  };
+
+  // Build smooth spline for the dynamic curve line
+  const splinePoints = days.map((_, i) => ({ x: getX(i), y: getY(lineValues[i]) }));
   let linePath = '';
   if (splinePoints.length > 0) {
     linePath = `M ${splinePoints[0].x} ${splinePoints[0].y}`;
@@ -118,50 +192,116 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
     }
   }
 
+  // Virtual series for annotation engine
+  const chartSeries = [
+    {
+      name: seriesNames.primaryBar,
+      color: seriesNames.primaryColor,
+      data: primaryValues,
+    },
+    {
+      name: seriesNames.lineCurve,
+      color: seriesNames.lineColor,
+      data: lineValues,
+    },
+  ];
+
+  const keyMilestones = getAllChartMilestones(
+    days,
+    chartSeries,
+    config.annotations,
+    config.label
+  );
+
+  const activeAnnotation: ResolvedAnnotation | null =
+    hoveredDayIdx !== null
+      ? resolveChartAnnotation({
+          labels: days,
+          series: chartSeries,
+          pointIndex: hoveredDayIdx,
+          predefinedAnnotations: config.annotations,
+          contextTitle: config.label,
+          unit: seriesNames.unit,
+        })
+      : null;
+
   return (
     <div className="w-full flex flex-col gap-6">
-      {/* 3 Minimal KPI Metric Cards */}
+      {/* 3 Dynamic KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        {/* Metric 1 */}
         <div className="p-5 rounded-2xl bg-[#161619] border border-zinc-800/80 flex flex-col justify-between">
-          <div className="text-xs text-zinc-400 font-medium italic">
-            Weekly CNS Stress
+          <div className="text-xs text-zinc-400 font-medium">
+            {kpiLabels.kpi1Label}
           </div>
-          <div className="text-3xl sm:text-4xl font-extrabold font-mono tabular-nums text-white my-2">
-            {totalCns} pts
-          </div>
-          <div className="text-[11px] text-zinc-500 font-mono">
-            {totalLiftingCns} lift + {totalCardioCns} cardio
-          </div>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-[#161619] border border-zinc-800/80 flex flex-col justify-between">
-          <div className="text-xs text-zinc-400 font-medium italic">
-            Fat Oxidation Score
-          </div>
-          <div className="text-3xl sm:text-4xl font-extrabold font-mono tabular-nums text-white my-2">
-            {fatOxScore} pts
-          </div>
-          <div className="text-[11px] text-zinc-500 font-mono">
-            {activeCardioIndices.length} sessions active
-          </div>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-[#161619] border border-zinc-800/80 flex flex-col justify-between">
-          <div className="text-xs text-zinc-400 font-medium italic">
-            Systemic Balance
-          </div>
-          <div className="text-2xl sm:text-3xl font-extrabold tracking-tight my-2" style={{ color: balanceColor }}>
-            {systemicBalance}
+          <div className="text-4xl font-extrabold font-mono tabular-nums text-white my-2">
+            {kpi1CalculatedValue}
+            {kpiLabels.kpi1Unit}
           </div>
           <div className="text-[11px] text-zinc-500">
-            Dynamic nervous system status
+            {kpiLabels.kpi1Subtext}
+          </div>
+        </div>
+
+        {/* Metric 2 */}
+        <div className="p-5 rounded-2xl bg-[#161619] border border-zinc-800/80 flex flex-col justify-between">
+          <div className="text-xs text-zinc-400 font-medium">
+            {kpiLabels.kpi2Label}
+          </div>
+          <div className="text-4xl font-extrabold font-mono tabular-nums text-white my-2">
+            {kpi2CalculatedValue}
+            <span className="text-xl ml-1 text-zinc-400 font-normal">
+              {kpiLabels.kpi2Unit}
+            </span>
+          </div>
+          <div className="text-[11px] text-zinc-500">
+            {kpiLabels.kpi2Subtext}
+          </div>
+        </div>
+
+        {/* Metric 3 */}
+        <div className="p-5 rounded-2xl bg-[#161619] border border-zinc-800/80 flex flex-col justify-between">
+          <div className="text-xs text-zinc-400 font-medium">
+            {kpiLabels.kpi3Label}
+          </div>
+          <div
+            className="text-2xl font-bold my-2 truncate"
+            style={{ color: balanceColor }}
+          >
+            {balanceStatus}
+          </div>
+          <div className="text-[11px] text-zinc-500">
+            {kpiLabels.kpi3Subtext}
           </div>
         </div>
       </div>
 
       {/* Main Combo Bar + Line Chart */}
       <div className="relative w-full rounded-2xl bg-[#161619] border border-zinc-800/80 p-5 sm:p-6 overflow-hidden">
-        <div className="relative w-full h-80">
+        {/* Header toolbar with Annotations Toggle */}
+        <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-zinc-800/80">
+          <div className="text-xs text-zinc-400 font-medium">
+            <span className="text-white font-semibold mr-1.5">{config.label}</span>
+            <span>({seriesNames.unit})</span>
+          </div>
+
+          <button
+            onClick={() => setShowAnnotations(!showAnnotations)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-medium border transition-all cursor-pointer ${
+              showAnnotations
+                ? 'bg-blue-950/30 border-blue-500/50 text-sky-300'
+                : 'bg-[#161619] border-zinc-800 text-zinc-400 hover:text-zinc-200'
+            }`}
+            title="Toggle dynamic callout annotations"
+          >
+            <Sparkles className="w-3 h-3 text-sky-400" />
+            <span>
+              {showAnnotations ? `Annotations (${keyMilestones.length})` : 'Muted'}
+            </span>
+          </button>
+        </div>
+
+        <div ref={chartContainerRef} className="relative w-full h-80">
           <svg
             className="w-full h-full overflow-visible"
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -196,10 +336,10 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
               );
             })}
 
-            {/* Lifting Stress Bars (Pink stadium pills) */}
+            {/* Primary Volume Bars */}
             {days.map((_, i) => {
-              const val = liftingStress[i];
-              if (val === 0) return null;
+              const val = primaryValues[i];
+              if (!val || val === 0) return null;
               const x = getX(i);
               const barWidth = 32;
               const barHeight = (val / 100) * plotHeight;
@@ -207,46 +347,46 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
 
               return (
                 <rect
-                  key={`lift-${i}`}
+                  key={`prim-${i}`}
                   x={x - barWidth / 2}
                   y={barY}
                   width={barWidth}
                   height={barHeight}
                   rx="8"
-                  fill="#f472b6" // soft vibrant pink
+                  fill={seriesNames.primaryColor}
                   className="transition-all duration-300"
                 />
               );
             })}
 
-            {/* Cardio Stress Bars (Small Yellow stadium pills) */}
+            {/* Accent Allocation Bars */}
             {days.map((_, i) => {
-              const hasCardio = activeCardioIndices.includes(i);
-              if (!hasCardio) return null;
+              const hasAccent = activeStepIndices.includes(i);
+              if (!hasAccent) return null;
               const x = getX(i);
               const barWidth = 26;
-              const barHeight = 18; // small accent bar
+              const barHeight = 18;
               const barY = padBottom - barHeight;
 
               return (
                 <rect
-                  key={`cardio-${i}`}
+                  key={`accent-${i}`}
                   x={x - barWidth / 2}
                   y={barY}
                   width={barWidth}
                   height={barHeight}
                   rx="6"
-                  fill="#facc15" // warm yellow
-                  className="transition-all duration-300 animate-fade-in"
+                  fill={seriesNames.accentColor}
+                  className="transition-all duration-300"
                 />
               );
             })}
 
-            {/* Fat Oxidation Stimulus Line (Cyan Spline) */}
+            {/* Dynamic Metric Curve (Spline) */}
             <path
               d={linePath}
               fill="none"
-              stroke="#7dd3fc" // soft cyan/blue
+              stroke={seriesNames.lineColor}
               strokeWidth="2.75"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -262,15 +402,53 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
                   cy={pt.y}
                   r={isHovered ? 6 : 4}
                   fill="#161619"
-                  stroke="#7dd3fc"
+                  stroke={seriesNames.lineColor}
                   strokeWidth="2.5"
                   className="transition-all duration-200"
                   style={{
-                    filter: isHovered ? 'drop-shadow(0 0 8px #7dd3fc)' : 'none',
+                    filter: isHovered ? `drop-shadow(0 0 8px ${seriesNames.lineColor})` : 'none',
                   }}
                 />
               );
             })}
+
+            {/* Key Milestone & Anomaly Pin Indicators */}
+            {showAnnotations &&
+              keyMilestones.map((m) => {
+                const pinX = getX(m.pointIndex);
+                const pinY = getY(lineValues[m.pointIndex]);
+                const isHovered = hoveredDayIdx === m.pointIndex;
+
+                return (
+                  <g
+                    key={`slider-pin-${m.pointIndex}`}
+                    onClick={() => setHoveredDayIdx(m.pointIndex)}
+                  >
+                    <ChartAnnotationPin
+                      cx={pinX}
+                      cy={pinY}
+                      color={m.color}
+                      isAnomaly={m.isAnomaly}
+                      type={m.type}
+                      isHovered={isHovered}
+                    />
+                  </g>
+                );
+              })}
+
+            {/* Hover Crosshair */}
+            {hoveredDayIdx !== null && (
+              <line
+                x1={getX(hoveredDayIdx)}
+                y1={padTop}
+                x2={getX(hoveredDayIdx)}
+                y2={padBottom}
+                stroke={activeAnnotation?.color || '#e0f2fe'}
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                opacity="0.75"
+              />
+            )}
 
             {/* X-axis Day Labels */}
             {days.map((day, i) => {
@@ -305,63 +483,80 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
             })}
           </svg>
 
-          {/* Hover Tooltip */}
-          {hoveredDayIdx !== null && (
-            <div className="absolute top-2 right-4 px-3.5 py-2 rounded-xl bg-[#202026]/95 border border-zinc-700/80 text-xs shadow-2xl backdrop-blur-md pointer-events-none">
-              <div className="font-semibold text-zinc-300 pb-1 border-b border-zinc-800">
-                {days[hoveredDayIdx]} Breakdown
-              </div>
-              <div className="flex flex-col gap-1 mt-1.5 font-mono text-xs">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1.5 text-pink-300">
-                    <span className="w-2 h-2 rounded-full bg-pink-400" />
-                    Lifting Stress:
-                  </span>
-                  <span className="font-bold text-white">
-                    {liftingStress[hoveredDayIdx]} pts
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1.5 text-yellow-300">
-                    <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                    Cardio Stress:
-                  </span>
-                  <span className="font-bold text-white">
-                    {activeCardioIndices.includes(hoveredDayIdx) ? '15 pts (Active)' : '0 pts (Off)'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1.5 text-sky-300">
-                    <span className="w-2 h-2 rounded-full bg-sky-400" />
-                    Fat Ox Stimulus:
-                  </span>
-                  <span className="font-bold text-white">
-                    {fatOxStimulus[hoveredDayIdx]} pts
-                  </span>
-                </div>
-              </div>
-            </div>
+          {/* Dynamic Callout Annotation on Hover */}
+          {showAnnotations && activeAnnotation && hoveredDayIdx !== null && (
+            (() => {
+              const anchor = svgToContainer(
+                getX(hoveredDayIdx),
+                getY(lineValues[hoveredDayIdx])
+              );
+              return (
+                <DynamicCalloutAnnotation
+                  annotation={activeAnnotation}
+                  timelineLabel={days[hoveredDayIdx]}
+                  x={anchor.x}
+                  y={anchor.y}
+                  containerWidth={containerDims.width}
+                  containerHeight={containerDims.height}
+                />
+              );
+            })()
           )}
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-4 pt-4 border-t border-zinc-800/80 text-xs font-medium">
-          <div className="flex items-center gap-2 text-zinc-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-pink-400" />
-            <span className="italic">Lifting CNS Stress</span>
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-zinc-800/80 text-xs">
+          <div className="flex flex-wrap items-center gap-6 font-medium">
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: seriesNames.primaryColor }}
+              />
+              <span className="italic">{seriesNames.primaryBar}</span>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: seriesNames.accentColor }}
+              />
+              <span className="italic">{seriesNames.accentBar}</span>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: seriesNames.lineColor }}
+              />
+              <span className="italic">{seriesNames.lineCurve}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-zinc-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-            <span className="italic">Cardio CNS Stress</span>
-          </div>
-          <div className="flex items-center gap-2 text-zinc-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-            <span className="italic">Fat Oxidation Stimulus</span>
-          </div>
+
+          {/* Quick jump milestone tags */}
+          {keyMilestones.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-zinc-500 font-mono">Pins:</span>
+              {keyMilestones.slice(0, 3).map((m) => (
+                <button
+                  key={m.pointIndex}
+                  onClick={() => setHoveredDayIdx(m.pointIndex)}
+                  onMouseEnter={() => setHoveredDayIdx(m.pointIndex)}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-medium border transition-all cursor-pointer ${
+                    hoveredDayIdx === m.pointIndex
+                      ? 'bg-zinc-800 text-white border-zinc-600'
+                      : 'bg-[#1a1a20] text-zinc-400 border-zinc-800 hover:text-zinc-200'
+                  }`}
+                  style={{
+                    color: hoveredDayIdx === m.pointIndex ? m.color : undefined,
+                  }}
+                >
+                  <span>{days[m.pointIndex]}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Interactive Range Slider Bar (Matches bottom widget in Image 2) */}
+      {/* Interactive Range Slider Bar */}
       <div className="relative rounded-2xl bg-[#161619] border border-zinc-800/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-xs sm:text-sm font-semibold text-zinc-200">
           {config.label}
@@ -378,7 +573,7 @@ export const DynamicSliderScheduleCard: React.FC<Props> = ({ data }) => {
             className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
           />
 
-          <div className="w-20 text-right font-mono font-bold text-sm text-white shrink-0">
+          <div className="w-28 text-right font-mono font-bold text-sm text-white shrink-0">
             {sliderVal} {config.unit}
           </div>
         </div>
