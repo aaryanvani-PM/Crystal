@@ -1,0 +1,6 @@
+{
+  "name": "InfographAI - Gemini Interactive Charts & Infographics",
+  "description": "Transform complex text, scenarios, and data into Gemini-style interactive charts, funnels, timelines, and metric infographics with real-time editing, code/image export, and cloud collaboration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
