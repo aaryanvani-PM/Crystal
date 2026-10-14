@@ -10,7 +10,7 @@ import {
   Sparkles,
   Building2,
   Cpu,
-  GraduationCap,
+  Microscope,
   HeartPulse,
   Eye,
   Check,
@@ -105,12 +105,27 @@ export const TemplateGallery: React.FC<Props> = ({
 
   if (!isOpen) return null;
 
-  const categoryIcons: Record<string, React.ReactNode> = {
-    All: <LayoutTemplate className="w-3.5 h-3.5" />,
-    Business: <Building2 className="w-3.5 h-3.5" />,
-    Tech: <Cpu className="w-3.5 h-3.5" />,
-    Education: <GraduationCap className="w-3.5 h-3.5" />,
-    Health: <HeartPulse className="w-3.5 h-3.5" />,
+  const DOMAIN_TABS: { id: TemplateCategory; label: string; emoji: string; icon: React.ReactNode }[] = [
+    { id: 'All', label: 'All Domains', emoji: '✨', icon: <LayoutTemplate className="w-3.5 h-3.5" /> },
+    { id: 'Tech', label: 'Tech & Systems', emoji: '💻', icon: <Cpu className="w-3.5 h-3.5" /> },
+    { id: 'Health', label: 'Health & Fitness', emoji: '🏃', icon: <HeartPulse className="w-3.5 h-3.5" /> },
+    { id: 'Business', label: 'Business & Finance', emoji: '💼', icon: <Building2 className="w-3.5 h-3.5" /> },
+    { id: 'Science', label: 'Science & Biotech', emoji: '🔬', icon: <Microscope className="w-3.5 h-3.5" /> },
+  ];
+
+  const getDomainBadgeStyle = (category: string) => {
+    switch (category) {
+      case 'Tech':
+        return 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40';
+      case 'Health':
+        return 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40';
+      case 'Business':
+        return 'bg-amber-950/40 text-amber-300 border-amber-800/40';
+      case 'Science':
+        return 'bg-sky-950/40 text-sky-300 border-sky-800/40';
+      default:
+        return 'bg-zinc-800/60 text-zinc-300 border-zinc-700/50';
+    }
   };
 
   return (
@@ -134,7 +149,7 @@ export const TemplateGallery: React.FC<Props> = ({
                 </span>
               </div>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Start your project from professionally structured architectures, crossover charts, and schedules.
+                Explore real-world interactive blueprints across Tech, Health, Business, and Science.
               </p>
             </div>
           </div>
@@ -147,7 +162,7 @@ export const TemplateGallery: React.FC<Props> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search templates, tags, stacks..."
+                placeholder="Search templates, domains, tags..."
                 className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-[#1a1a20] border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors"
               />
               {searchQuery && (
@@ -173,30 +188,28 @@ export const TemplateGallery: React.FC<Props> = ({
 
         {/* Categories & Filter Bar */}
         <div className="px-6 py-3 border-b border-zinc-800/60 bg-[#121215] flex flex-wrap items-center justify-between gap-3 shrink-0">
-          {/* Main Category Tabs */}
+          {/* Main Category Tabs with Emojis */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {(['All', 'Business', 'Tech', 'Education', 'Health'] as TemplateCategory[]).map((cat) => {
-              const isActive = activeCategory === cat;
+            {DOMAIN_TABS.map((tab) => {
+              const isActive = activeCategory === tab.id;
               return (
                 <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer shrink-0 ${
+                  key={tab.id}
+                  onClick={() => setActiveCategory(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer shrink-0 ${
                     isActive
                       ? 'bg-zinc-200 text-zinc-950 font-semibold shadow-sm'
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                   }`}
                 >
-                  <span className={isActive ? 'text-zinc-950' : 'text-zinc-400'}>
-                    {categoryIcons[cat]}
-                  </span>
-                  <span>{cat === 'All' ? 'All Templates' : cat}</span>
+                  <span className="text-xs">{tab.emoji}</span>
+                  <span>{tab.label}</span>
                   <span
                     className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
                       isActive ? 'bg-zinc-300 text-zinc-900 font-bold' : 'text-zinc-500'
                     }`}
                   >
-                    {categoryCounts[cat] || 0}
+                    {categoryCounts[tab.id] || 0}
                   </span>
                 </button>
               );
@@ -267,10 +280,16 @@ export const TemplateGallery: React.FC<Props> = ({
                       <div>
                         {/* Domain Category / Archetype Breadcrumb */}
                         <div className="flex items-center justify-between text-[11px] mb-2.5">
-                          <span className="font-mono text-zinc-400 font-medium tracking-wide">
-                            {template.category.toUpperCase()} · {template.subCategory}
-                          </span>
-                          <span className="text-[10px] text-zinc-500 font-mono">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border flex items-center gap-1 shrink-0 ${getDomainBadgeStyle(template.category)}`}>
+                              <span>{template.domainEmoji}</span>
+                              <span>{template.category}</span>
+                            </span>
+                            <span className="font-mono text-zinc-400 font-medium tracking-wide truncate max-w-[130px] sm:max-w-[150px]">
+                              · {template.subCategory}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-zinc-500 font-mono shrink-0 ml-1">
                             {template.archetype === 'stepper-pipeline'
                               ? 'Interactive Flow'
                               : template.archetype === 'scenario-area'
@@ -358,8 +377,12 @@ export const TemplateGallery: React.FC<Props> = ({
             >
               <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-zinc-400 uppercase">
-                    {previewTemplate.category} · {previewTemplate.subCategory}
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border flex items-center gap-1 ${getDomainBadgeStyle(previewTemplate.category)}`}>
+                    <span>{previewTemplate.domainEmoji}</span>
+                    <span>{previewTemplate.category}</span>
+                  </span>
+                  <span className="text-xs font-mono text-zinc-400">
+                    · {previewTemplate.subCategory}
                   </span>
                 </div>
                 <button

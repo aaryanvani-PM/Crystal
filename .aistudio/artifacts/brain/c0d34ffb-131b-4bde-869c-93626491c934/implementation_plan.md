@@ -1,148 +1,111 @@
-# Minimalist Gemini Interactive Infographic Studio
+# VisualizerAI: Universal Multi-Domain Repositioning Plan
 
-A minimalist, distraction-free web app that transforms any topic, data, or scenario into authentic Gemini-style interactive infographic cards featuring dynamic scenario switchers, parameter sliders, pipeline walkthrough tabs, and code/image exports.
+Reposition **VisualizerAI** from a narrow tech-only architecture tool into an **all-purpose interactive visualizer** for any concept, workflow, or data domain. This retains high-value technical architecture pipelines while elevating Health & Fitness, Business & Finance, and Science & Biotech use cases with distinct visual domain bifurcation via curated emojis and expanded real-world templates.
 
 ---
 
-### User Review & Critical Decisions
+## User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following revisions directly address the user's feedback and reference screenshots:
-
-- **Confirmed Minimalist Website Aesthetics**:
-  - The website chrome is stripped down to an ultra-clean, matte dark canvas (`#121214` / `#18181b`) with zero dashboard clutter, no noisy sidebars, and no contrasting colored cards on the site layout.
-  - Saturated/vibrant colors are reserved strictly *inside the charts and graphs for bifurcations* (e.g. pink bars for lifting stress, soft yellow for cardio stress, cyan/pastel blue for oxidation stimulus/glycogen curves).
-- **Confirmed Interactive In-Card Controls** (as seen in user's attached Gemini screenshots):
-  1. *Scenario & Mode Switchers*: Segmented switches right inside the card (e.g., `Elliptical After Lift (Post-Workout)` vs `Elliptical Before Lift (Pre-Workout)`) that recalculate the curves and metrics.
-  2. *Dynamic Parameter Sliders*: Interactive range sliders (e.g., `Zone 2 Cardio Days / Week: 1-7 Days`) that dynamically recalculate and animate the chart points and KPI totals in real-time.
-  3. *Step-by-Step Pipeline & Architecture Steppers*: Interactive tabs (e.g., `1. Prompt`, `2. LLM`, `3. JSON`, `4. React`, `5. Render/Export`) with Previous/Next buttons, active step details, and connected architecture node maps.
-- **Dual-Mode Editing & Export**:
-  - Clean inline editing + AI chat prompt for prompt refinement.
-  - Crisp PNG image export (retina ready for pitch decks and posts), vector SVG download, and clean standalone React/HTML code.
+> The following product decisions were confirmed during Phase 1 interactive clarification:
+> - **Core Positioning & Headline:** Framed as an *All-Purpose Interactive Visualizer for any data or concept*.
+> - **Domain Taxonomy & Organization:** Multi-domain tabs organized across **💻 Tech & Systems**, **🏃 Health & Fitness**, **💼 Business & Finance**, and **🔬 Science & Biotech**.
+> - **Default Canvas & First Impression:** Retains the high-throughput **Instagram Feed Fan-Out Architecture** as the initial loaded canvas for first-time visitors, while highlighting multi-domain quick presets directly below with domain emoji badges.
+> - **Expanded Use Cases:** Expands the library with high-fidelity real-world templates across fitness/metabolism, SaaS/corporate finance, machine learning/cloud pipelines, and biochemical/clean-tech systems.
 
 ---
 
-### 1. Overview & Core Concept
+## 1. Overview & Core Concept
 
-- **What It Does**: Users throw any text, problem, scientific theory, business scenario, or raw data into a minimalist, chat-like prompt box. Gemini processes the intent and outputs a beautiful, interactive card that feels exactly like a native Gemini response.
-- **Target Audience**: Anyone wanting to explain complex ideas, data patterns, or workflows visually for presentations, team syncs, blogs, or marketing posts.
-- **Key Value**: Turns dense cognitive concepts into intuitive visual mechanisms that users can physically interact with (flipping scenarios, dragging sliders, clicking steps).
-
----
-
-### 2. User Experience & Visual Design
-
-#### Layout Structure
-
-- **Minimalist Top Bar**:
-  - Subtle wordmark (`InfographAI`), quiet status, and essential action icons (Export PNG/SVG, Copy Code, Share Link, Cloud Saved).
-- **Centered Prompt & Ingestion**:
-  - Clean, distraction-free input bar with prompt inspiration pills (e.g. `Cardio Timing & Substrates`, `Weekly Stress & Recovery Schedule`, `Text-to-UI JSON Pipeline`, `SaaS Conversion Funnel`).
-- **Hero Interactive Card**:
-  - Matte dark surface (`#18181b` / `#1e1e24`), subtle 1px border (`#27272a`).
-  - Title in clean Plus Jakarta Sans, italicized/muted subtitle explaining the thesis.
-  - Interactive controls block (Scenario Switcher / Slider / Stepper).
-  - 3 clean KPI metric blocks with tabular bold numbers and italicized explanatory notes.
-  - The chart or diagram:
-    - *Area / Line Curve*: Multi-substrate area fills with contrasting bifurcation colors (e.g. golden-olive vs blue-grey), smooth Catmull-Rom curves, and hover tooltips.
-    - *Combo Bar + Line Schedule*: Pink pill bars, yellow cardio bars, and overlaid cyan spline line over days of the week.
-    - *Architecture Flow & Stepper*: Connected pill nodes with flow arrows, active step highlighting, and rich step detail panel.
-  - Bottom takeaway card with prominent highlight ("Metabolic Superiority", "Key Insight").
+- **What It Does:** VisualizerAI transforms unstructured natural language prompts, complex workflows, or quantitative data models into interactive, responsive visualization cards. Users can switch scenarios, adjust dynamic timeline sliders, step through end-to-end multi-tier pipelines, inspect technical annotations, live-edit specs, and export production assets (PNG, SVG, Code, JSON).
+- **Target Audience / Persona:** 
+  - Software engineers & systems architects modeling cloud and distributed systems.
+  - Fitness coaches, kinesiologists, and athletes comparing metabolic substrate utilization and training load.
+  - Product managers, founders, and finance operators modeling cohort retention, payment rails, and unit economics.
+  - Scientists, researchers, and educators illustrating biochemical mechanisms and clean energy grids.
+- **Key Value:** Eliminates the barrier between complex mental models and interactive visual artifacts. Users can explore trade-offs dynamically rather than staring at static, unengaging charts.
 
 ---
 
-### 3. Key Product Decisions & Trade-Offs
+## 2. User Experience & Visual Design
 
-#### Decision 1: Pure Minimalist Canvas vs Multi-Section Dashboard
-- **Chosen Approach**: Completely replace the multi-section dashboard layout with a focused, single-view canvas. The user enters a prompt, and the resulting Gemini card takes center stage.
-- **Why**: Perfectly aligns with the user's requirement and screenshots. Avoids generic SaaS dashboard aesthetic.
+### Key User Flows
+1. **Universal Landing Experience:** The user lands on a clear hero header reading *"Turn Any Idea, Data, or System into Interactive Visuals"*. The default interactive canvas immediately showcases the 5-tier Instagram system design.
+2. **Domain Discovery via Segmented Tabs:** Beneath the prompt bar, a segmented control features domain-bifurcated tabs:
+   - `✨ Featured` (Curated cross-domain highlights)
+   - `💻 Tech & Systems` (System design, Kafka pipelines, RAG retrieval)
+   - `🏃 Health & Fitness` (Metabolic cardio timing, Zone 2 scheduling, recovery)
+   - `💼 Business & Finance` (SaaS cohort NRR, Stripe payments, liquidity pools)
+   - `🔬 Science & Biotech` (CRISPR prime editing, battery storage grid, RNA transcription)
+3. **1-Click Card Inspiration:** Clicking any quick card populates the prompt input, loads the respective interactive model, and updates local storage persistence.
+4. **Expanded Template Gallery Modal:** The gallery modal groups 16+ production-grade templates with domain filter buttons, search input, and emoji-tagged archetype badges.
+5. **Live Editing & AI Refinement:** The slide-over editor supports real-time editing and natural language Gemini refinement across any domain.
 
-#### Decision 2: In-Card Interactive Mechanisms (Stateful Logic)
-- **Chosen Approach**: When Gemini generates an infographic, it generates multiple data states (e.g., Scenario A vs Scenario B, or Slider value mapping, or Step 1-5 definitions) so that clicking the switch, dragging the slider, or stepping through the pipeline immediately updates the chart in real time on the client with zero latency.
-- **Why**: Recreates the magic of Gemini's interactive response cards where users explore the problem dynamically.
-
-#### Decision 3: Local + Cloud Persistence without UI Noise
-- **Chosen Approach**: Quiet auto-saving with subtle "Saved" indicator in the top bar and a minimal modal for share links and exports.
+### Visual Identity & Theme
+- **Aesthetic Direction:** Dark graphite studio theme (`#101012` base, `#161619` cards, `#222227` active accents) following the *SaaS & Dashboard* and *Universal Frontend Design Constitution* rules.
+- **Visual Domain Bifurcation:**
+  - **💻 Tech & Systems:** Indigo / Cyan accents with terminal/pipeline iconography.
+  - **🏃 Health & Fitness:** Emerald / Lime accents with metabolic timeline indicators.
+  - **💼 Business & Finance:** Amber / Violet accents with currency and cohort indicators.
+  - **🔬 Science & Biotech:** Sky / Rose accents with biochemical structure badges.
+- **Typography & Formatting:** High-density tabular figures (`tabular-nums`) for all numeric counters and latency specs; clean, unboxed metadata typography with subtle bullet/slash separators.
+- **Zero-Pill Discipline:** Avoids decorative pill sandwiches; filter controls are implemented as functional segmented buttons with active state feedback.
 
 ---
 
-### 4. Technical Architecture & Data Strategy
+## 3. Key Product Decisions & Trade-Offs
+
+- **Decision 1: Reposition as All-Purpose instead of Splitting Products**
+  - *Chosen Approach:* Maintain a single universal engine that handles pipelines, trade-off models, and schedules across tech, fitness, business, and science.
+  - *Why:* Demonstrates the full flexibility of the AI-powered visualizer engine. Keeps the platform unified and provides immediate value to diverse user personas without requiring separate apps.
+  - *Alternatives Considered:* Removing fitness/business templates to create a tech-only tool. Rejected as it discards rich existing interactive capabilities (e.g., metabolic crossover charts and SaaS cohort models).
+
+- **Decision 2: Default Canvas Selection**
+  - *Chosen Approach:* Keep the Instagram Feed Fan-Out architecture as the initial loaded canvas, with immediate visible access to other domain presets.
+  - *Why:* The Instagram architecture provides an instant "wow" factor with its 5-stage interactive stepper, node inspection, and latency metrics, establishing production-grade quality immediately.
+  - *Alternatives Considered:* Randomizing default or defaulting to cardio timeline. Rejected to prevent landing visual inconsistency and maintain strong first impressions.
+
+- **Decision 3: Local Storage Persistence & Multi-Domain State**
+  - *Chosen Approach:* Save active domain category and last loaded template in `localStorage`.
+  - *Why:* Prevents loss of context when refreshing and ensures users stay in their selected domain workflow.
+
+---
+
+## 4. Technical Architecture & Data Strategy
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│               Minimalist Web Canvas (Matte Dark #121214)               │
-│                                                                        │
-│  [Top Bar: InfographAI · Export PNG/SVG · Code · Share Link]           │
-│                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │ Prompt Input Bar: "Throw any problem, topic, or raw data here..."│  │
-│  │ Presets: [Cardio Timing] [Weekly Stress] [Text-to-UI Pipeline]   │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-│                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │ Hero Gemini Interactive Card (#18181b)                           │  │
-│  │                                                                  │  │
-│  │ 1. Header & Subtitle                                             │  │
-│  │ 2. Interactive Switcher / Slider / Stepper Tabs                   │  │
-│  │ 3. 3 KPI Metric Blocks (with italicized notes)                   │  │
-│  │ 4. Dynamic Chart (Area / Combo Bar+Line / Node Diagram)          │  │
-│  │ 5. Legend (● Pink Lifting  ● Yellow Cardio  ● Blue Stimulus)     │  │
-│  │ 6. Bottom Highlight Insight Banner                               │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
+│                        App Viewport (App.tsx)                          │
+├───────────────────────────────────┬────────────────────────────────────┤
+│ Header: Logo + Domain Stats       │ Modals: TemplateGallery, Editor,   │
+│ + Tour, Edit, Share, Export       │ Export, Share, Onboarding Tour     │
+├───────────────────────────────────┴────────────────────────────────────┤
+│ PromptBar.tsx                                                          │
+│  - Universal Headline & Subtitle                                       │
+│  - Natural Language Input + Gemini Generator Bridge                    │
+│  - Domain Segmented Tabs (💻 Tech, 🏃 Health, 💼 Business, 🔬 Science) │
+│  - Quick Example Architecture & Model Cards with Active Checkmarks     │
+├────────────────────────────────────────────────────────────────────────┤
+│ InfographicCanvas.tsx                                                  │
+│  - StepperPipeline: Node graph, tier lanes, latency telemetry          │
+│  - ScenarioArea: Metabolic crossover, NRR retention, trade-offs        │
+│  - DynamicSliderSchedule: Interactive weekly volume & fatigue models   │
+├────────────────────────────────────────────────────────────────────────┤
+│ Utilities & Engine                                                     │
+│  - storage.ts (Local draft persistence & schema validator)             │
+│  - templateGalleryData.ts (16+ multi-domain templates with emojis)     │
+│  - sampleInfographics.ts (Multi-domain dataset)                        │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Enhanced Interactive Schema
-
-```typescript
-export interface InteractiveInfographic {
-  id: string;
-  title: string;
-  subtitle: string;
-  topicKicker?: string;
-  type: 'scenario-area' | 'dynamic-slider-schedule' | 'stepper-pipeline' | 'funnel' | 'comparison-bar';
-  
-  // Scenario Switcher (e.g. Post-Workout vs Pre-Workout)
-  scenarios?: Array<{
-    id: string;
-    label: string;
-    metrics: Array<{ label: string; value: string; note: string }>;
-    chartData: {
-      labels: string[];
-      series: Array<{ name: string; color: string; data: number[] }>;
-    };
-    insightHighlight: { title: string; text: string };
-  }>;
-
-  // Dynamic Slider Configuration (e.g. Zone 2 Cardio Days / Week: 1-7)
-  sliderConfig?: {
-    label: string;
-    min: number;
-    max: number;
-    step: number;
-    defaultValue: number;
-    unit: string;
-    // Map slider value to metrics and chart data
-    calculateState: (value: number) => {
-      metrics: Array<{ label: string; value: string; note: string }>;
-      series: Array<{ name: string; color: string; type: 'bar' | 'line'; data: number[] }>;
-    };
-  };
-
-  // Pipeline Stepper (e.g. 1. Prompt -> 2. LLM -> 3. JSON -> 4. React -> 5. Export)
-  pipelineConfig?: {
-    nodes: Array<{ id: string; label: string; subLabel: string; activeInSteps: number[] }>;
-    steps: Array<{
-      stepNumber: number;
-      stepTitle: string;
-      tag: string;
-      description: string;
-    }>;
-  };
-
-  // Current active interactive state
-  activeScenarioId?: string;
-  activeSliderValue?: number;
-  activeStepIndex?: number;
-}
-```
+### Component & State Mapping
+- `PromptBar.tsx`:
+  - `activeDomain`: Filter state (`'Featured' | 'Tech' | 'Health' | 'Business' | 'Science'`).
+  - `FEATURED_MODELS`: Curated cards for each domain with domain emojis, metrics, and starter prompts.
+  - `onSelectSample`: Updates canvas data and synchronizes local storage.
+- `TemplateGallery.tsx`:
+  - Category filter tabs updated to `['All Domains', '💻 Tech', '🏃 Health & Fitness', '💼 Business', '🔬 Science']`.
+  - Added new sample templates: e.g. *CRISPR Cas9 vs Prime Editing*, *SaaS Churn Cohort Dynamics*, *High-Performance Zone 2 Cardio Engine*, *Uber Geospatial H3 Dispatch*.
+- `App.tsx`:
+  - Contextual banner displaying the active domain category and card archetype.
+  - Seamless persistence across refresh.

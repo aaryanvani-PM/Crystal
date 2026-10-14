@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -724,7 +725,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`InfographAI server running on http://0.0.0.0:${PORT}`);
+    console.log(`VisualizerAI server running on http://0.0.0.0:${PORT}`);
   });
 }
 

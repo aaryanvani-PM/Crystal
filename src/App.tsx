@@ -1,29 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { MinimalInfographicData } from './types/infographic';
 import { SAMPLE_INFOGRAPHICS } from './data/sampleInfographics';
-import { Header } from './components/Header';
 import { PromptBar } from './components/PromptBar';
 import { InfographicCanvas } from './components/InfographicCanvas';
 import { LiveEditorDrawer } from './components/LiveEditorDrawer';
 import { ExportModal } from './components/ExportModal';
 import { ShareModal } from './components/ShareModal';
 import { TemplateGallery } from './components/TemplateGallery';
-import { TemplateItem } from './data/templateGalleryData';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { OnboardingWalkthrough } from './components/OnboardingWalkthrough';
+import { TemplateItem, TEMPLATES_DATA } from './data/templateGalleryData';
+import { AlertCircle, CheckCircle2, Loader2, RotateCcw, Sliders, Share2, Download } from 'lucide-react';
+import {
+  loadPersistedInfographic,
+  persistInfographic,
+  loadPersistedPrompt,
+  persistPrompt,
+  clearPersistedInfographic,
+} from './utils/storage';
+
+const DEFAULT_SAMPLE = SAMPLE_INFOGRAPHICS[9] || SAMPLE_INFOGRAPHICS[0];
+const DEFAULT_PROMPT =
+  'Design Instagram high-throughput feed generation and fan-out system architecture with interactive stepper tabs (Mobile CDN, Envoy Gateway, Hybrid Push/Pull Fanout, Redis Sorted Sets, PostgreSQL Shards) handling 500M daily active users.';
 
 export default function App() {
-  const [data, setData] = useState<MinimalInfographicData>(SAMPLE_INFOGRAPHICS[0]);
+  const [data, setData] = useState<MinimalInfographicData>(() => {
+    return loadPersistedInfographic() || DEFAULT_SAMPLE;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isAiRefining, setIsAiRefining] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [currentPrompt, setCurrentPrompt] = useState<string>('');
+  const [currentPrompt, setCurrentPrompt] = useState<string>(() => {
+    return loadPersistedPrompt() || DEFAULT_PROMPT;
+  });
 
   // Modal / Drawer states
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Auto-launch walkthrough for first-time visitors
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('visualizerai_onboarding_completed');
+    if (!hasSeenTour) {
+      const timer = setTimeout(() => {
+        setIsTourOpen(true);
+      }, 850);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Auto-persist infographic data to local storage on any change
+  useEffect(() => {
+    persistInfographic(data);
+  }, [data]);
+
+  // Auto-persist active prompt to local storage
+  useEffect(() => {
+    persistPrompt(currentPrompt);
+  }, [currentPrompt]);
 
   // Check URL query parameters for ?share=share_xyz on load
   useEffect(() => {
@@ -60,6 +97,7 @@ export default function App() {
     try {
       setIsLoading(true);
       setErrorMessage(null);
+      setCurrentPrompt(prompt);
 
       const res = await fetch('/api/infographic/generate', {
         method: 'POST',
@@ -114,10 +152,58 @@ export default function App() {
     }
   };
 
+  // Domain classification for current active infographic
+  const currentDomainInfo = React.useMemo(() => {
+    const matched = TEMPLATES_DATA.find((t) => t.data.id === data.id);
+    if (matched) {
+      return { emoji: matched.domainEmoji, category: matched.category };
+    }
+    const textLower = `${data.title} ${data.subtitle || ''}`.toLowerCase();
+    if (
+      textLower.includes('fat') ||
+      textLower.includes('cardio') ||
+      textLower.includes('hypertrophy') ||
+      textLower.includes('workout') ||
+      textLower.includes('stress') ||
+      textLower.includes('glycogen')
+    ) {
+      return { emoji: '🏃', category: 'Health' };
+    }
+    if (
+      textLower.includes('saas') ||
+      textLower.includes('stripe') ||
+      textLower.includes('payment') ||
+      textLower.includes('equity') ||
+      textLower.includes('waterfall') ||
+      textLower.includes('order') ||
+      textLower.includes('checkout') ||
+      textLower.includes('finance') ||
+      textLower.includes('pricing') ||
+      textLower.includes('trading')
+    ) {
+      return { emoji: '💼', category: 'Business' };
+    }
+    if (
+      textLower.includes('crispr') ||
+      textLower.includes('mrna') ||
+      textLower.includes('grid') ||
+      textLower.includes('solar') ||
+      textLower.includes('vaccine') ||
+      textLower.includes('biology') ||
+      textLower.includes('energy')
+    ) {
+      return { emoji: '🔬', category: 'Science' };
+    }
+    return { emoji: '💻', category: 'Tech' };
+  }, [data]);
+
   const handleSelectSample = (index: number) => {
     const sample = SAMPLE_INFOGRAPHICS[index];
     if (sample) {
       setData(sample);
+      if (sample.originalPrompt) {
+        setCurrentPrompt(sample.originalPrompt);
+      }
       showToast(`Loaded ${sample.title}`);
     }
   };
@@ -129,16 +215,20 @@ export default function App() {
     showToast(`Loaded template: ${template.title}`);
   };
 
+  const handleResetToDefault = () => {
+    clearPersistedInfographic();
+    setData(DEFAULT_SAMPLE);
+    setCurrentPrompt(DEFAULT_PROMPT);
+    showToast('Reset to default template (Instagram System Design)');
+  };
+
+  const handleTourComplete = () => {
+    localStorage.setItem('visualizerai_onboarding_completed', 'true');
+    showToast('Walkthrough complete! Click any node or prompt to start.');
+  };
+
   return (
     <div className="min-h-screen bg-[#101012] text-white flex flex-col font-sans selection:bg-zinc-800 selection:text-white">
-      {/* Minimal Top Header */}
-      <Header
-        onOpenTemplates={() => setIsTemplateGalleryOpen(true)}
-        onOpenEditor={() => setIsEditorOpen(true)}
-        onOpenExport={() => setIsExportOpen(true)}
-        onOpenShare={() => setIsShareOpen(true)}
-      />
-
       {/* Main Minimalist Canvas Viewport */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 items-center">
         {/* Error Alert */}
@@ -157,13 +247,15 @@ export default function App() {
           </div>
         )}
 
-        {/* Minimal Centered Prompt & Ingest Bar */}
+        {/* Modern Command Prompt & Inspiration Bar with Integrated Navigation */}
         <PromptBar
           onGenerate={handleGenerate}
           isLoading={isLoading}
           onSelectSample={handleSelectSample}
           onOpenTemplates={() => setIsTemplateGalleryOpen(true)}
+          onStartTour={() => setIsTourOpen(true)}
           currentPrompt={currentPrompt}
+          activeSampleId={data.id}
         />
 
         {/* Loading Spinner State */}
@@ -171,13 +263,24 @@ export default function App() {
           <div className="w-full flex flex-col items-center justify-center py-24 gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
             <div className="text-xs text-zinc-400 font-mono">
-              Gemini is structuring infographic card...
+              Synthesizing interactive architecture diagram...
             </div>
           </div>
         )}
 
-        {/* Hero Interactive Card */}
-        {!isLoading && <InfographicCanvas data={data} />}
+        {/* Canvas Section & Interactive Card */}
+        {!isLoading && (
+          <div data-tour="tour-canvas" className="w-full">
+            <InfographicCanvas
+              data={data}
+              domainInfo={currentDomainInfo}
+              onOpenEditor={() => setIsEditorOpen(true)}
+              onOpenShare={() => setIsShareOpen(true)}
+              onOpenExport={() => setIsExportOpen(true)}
+              onReset={handleResetToDefault}
+            />
+          </div>
+        )}
       </main>
 
       {/* Template Gallery Modal */}
@@ -196,6 +299,7 @@ export default function App() {
         onChange={(updated) => setData(updated)}
         onAiRefine={handleAiRefine}
         isAiRefining={isAiRefining}
+        onReset={handleResetToDefault}
       />
 
       {/* Export Modal (PNG, SVG, Code, JSON) */}
@@ -210,6 +314,13 @@ export default function App() {
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         data={data}
+      />
+
+      {/* Onboarding Walkthrough Tour */}
+      <OnboardingWalkthrough
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onComplete={handleTourComplete}
       />
 
       {/* Toast Feedback */}

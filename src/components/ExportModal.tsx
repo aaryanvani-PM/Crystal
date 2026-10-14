@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MinimalInfographicData } from '../types/infographic';
 import {
   exportCardAsPng,
+  exportCardAsPdf,
   exportCardAsSvg,
   exportDataAsJson,
 } from '../utils/exportHelpers';
@@ -16,9 +17,11 @@ import {
   Copy,
   Check,
   FileImage,
+  FileText,
   FileCode,
   Layers,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 
 interface Props {
@@ -34,6 +37,7 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
   const [copied, setCopied] = useState(false);
   const [scale, setScale] = useState(2);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   if (!isOpen) return null;
 
@@ -59,6 +63,18 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      const safeFilename = `${data.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-infographic.pdf`;
+      await exportCardAsPdf('infographic-export-card', safeFilename);
+    } catch (err) {
+      console.error('Failed to export PDF:', err);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   const handleDownloadSvg = () => {
     const safeFilename = `${data.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-infographic.svg`;
     exportCardAsSvg('infographic-export-card', safeFilename);
@@ -71,40 +87,40 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="relative w-full max-w-3xl rounded-2xl border border-slate-800 bg-[#0c1222] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-4xl rounded-2xl border border-zinc-800 bg-[#0e0e12] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#090d16]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-[#121216]">
           <div className="flex items-center gap-2">
-            <Download className="w-5 h-5 text-sky-400" />
+            <Download className="w-5 h-5 text-zinc-300" />
             <h3 className="text-base font-bold text-white">Export & Embed Infographic</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab selection */}
-        <div className="flex border-b border-slate-800 px-6 bg-[#090d16]/50 text-xs">
+        <div className="flex border-b border-zinc-800 px-6 bg-[#121216]/50 text-xs overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('image')}
-            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer shrink-0 ${
               activeTab === 'image'
-                ? 'border-sky-400 text-sky-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-white text-white'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <FileImage className="w-4 h-4" />
-            Image (PNG / SVG)
+            Document & Image (PNG / PDF / SVG)
           </button>
           <button
             onClick={() => setActiveTab('react')}
-            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer shrink-0 ${
               activeTab === 'react'
-                ? 'border-sky-400 text-sky-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-white text-white'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <Code2 className="w-4 h-4" />
@@ -112,10 +128,10 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
           </button>
           <button
             onClick={() => setActiveTab('html')}
-            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer shrink-0 ${
               activeTab === 'html'
-                ? 'border-sky-400 text-sky-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-white text-white'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <FileCode className="w-4 h-4" />
@@ -123,10 +139,10 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
           </button>
           <button
             onClick={() => setActiveTab('json')}
-            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 font-semibold border-b-2 transition-colors cursor-pointer shrink-0 ${
               activeTab === 'json'
-                ? 'border-sky-400 text-sky-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-white text-white'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <Layers className="w-4 h-4" />
@@ -135,51 +151,51 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 text-xs text-slate-300">
-          {/* TAB: IMAGE EXPORT */}
+        <div className="flex-1 overflow-y-auto p-6 text-xs text-zinc-300 bg-[#0d0d10]">
+          {/* TAB: VISUAL DOCUMENT (PNG / PDF / SVG) */}
           {activeTab === 'image' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* PNG Card */}
-                <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 flex flex-col justify-between gap-4">
+                <div className="p-5 rounded-xl border border-zinc-800 bg-[#141418] flex flex-col justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 font-bold text-white text-sm mb-1">
                       <FileImage className="w-4 h-4 text-sky-400" />
-                      High-Resolution PNG
+                      High-Res PNG
                     </div>
-                    <p className="text-slate-400 text-xs leading-relaxed">
+                    <p className="text-zinc-400 text-xs leading-relaxed">
                       Pixel-perfect transparent or solid raster export. Ideal for Keynote, PowerPoint, Google Slides, and LinkedIn/X social cards.
                     </p>
 
                     {/* Scale Picker */}
                     <div className="flex items-center gap-2 mt-4 text-xs">
-                      <span className="text-slate-400">Resolution:</span>
+                      <span className="text-zinc-400">Scale:</span>
                       <button
                         type="button"
                         onClick={() => setScale(1)}
-                        className={`px-2.5 py-1 rounded font-mono font-semibold transition-colors ${
-                          scale === 1 ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                          scale === 1 ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
                         }`}
                       >
-                        1x (Web)
+                        1x
                       </button>
                       <button
                         type="button"
                         onClick={() => setScale(2)}
-                        className={`px-2.5 py-1 rounded font-mono font-semibold transition-colors ${
-                          scale === 2 ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                          scale === 2 ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
                         }`}
                       >
-                        2x (Retina Slides)
+                        2x Retina
                       </button>
                       <button
                         type="button"
                         onClick={() => setScale(3)}
-                        className={`px-2.5 py-1 rounded font-mono font-semibold transition-colors ${
-                          scale === 3 ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                          scale === 3 ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
                         }`}
                       >
-                        3x (Print/Banner)
+                        3x Print
                       </button>
                     </div>
                   </div>
@@ -187,40 +203,75 @@ export const ExportModal: React.FC<Props> = ({ isOpen, onClose, data }) => {
                   <button
                     onClick={handleDownloadPng}
                     disabled={isExporting}
-                    className="w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 cursor-pointer disabled:opacity-50"
+                    className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 border border-zinc-700/60"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>{isExporting ? 'Generating PNG...' : 'Download PNG Image'}</span>
+                    {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    <span>{isExporting ? 'Generating PNG...' : 'Download PNG'}</span>
+                  </button>
+                </div>
+
+                {/* PDF Document Card */}
+                <div className="p-5 rounded-xl border border-zinc-700/80 bg-[#16161c] flex flex-col justify-between gap-4 relative ring-1 ring-zinc-700/50">
+                  <div className="absolute top-3 right-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                      New
+                    </span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 font-bold text-white text-sm mb-1">
+                      <FileText className="w-4 h-4 text-emerald-400" />
+                      Vector PDF Document
+                    </div>
+                    <p className="text-zinc-400 text-xs leading-relaxed">
+                      Print-ready vector PDF document matching the canvas dimensions. Perfect for executive briefings, design reviews, board memos, and email attachments.
+                    </p>
+                    <div className="mt-4 text-[11px] text-zinc-400 font-mono flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      Auto-fit landscape / portrait format
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={isExportingPdf}
+                    className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {isExportingPdf ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : <Download className="w-4 h-4 text-black" />}
+                    <span>{isExportingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
                   </button>
                 </div>
 
                 {/* Vector SVG Card */}
-                <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 flex flex-col justify-between gap-4">
+                <div className="p-5 rounded-xl border border-zinc-800 bg-[#141418] flex flex-col justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 font-bold text-white text-sm mb-1">
-                      <Code2 className="w-4 h-4 text-emerald-400" />
+                      <Code2 className="w-4 h-4 text-purple-400" />
                       Scalable Vector (SVG)
                     </div>
-                    <p className="text-slate-400 text-xs leading-relaxed">
-                      Infinite resolution vector graphics. Editable directly inside Figma, Adobe Illustrator, or embedded natively on web pages.
+                    <p className="text-zinc-400 text-xs leading-relaxed">
+                      Infinite resolution vector graphics. Editable directly inside Figma, Adobe Illustrator, Sketch, or embedded natively into web documentation.
                     </p>
+                    <div className="mt-4 text-[11px] text-zinc-400 font-mono flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                      Directly importable into Figma
+                    </div>
                   </div>
 
                   <button
                     onClick={handleDownloadSvg}
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer border border-zinc-700/60"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download Vector SVG</span>
+                    <span>Download SVG</span>
                   </button>
                 </div>
               </div>
 
               {/* Quick Deck Tip */}
-              <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-                <div className="text-slate-400 leading-relaxed text-xs">
-                  <span className="font-semibold text-slate-200">Deck Pro-Tip:</span> The 16:9 canvas matches standard presentation slide decks (1920x1080), while 1:1 is optimized for social posts and executive memos.
+              <div className="p-3.5 rounded-xl border border-zinc-800 bg-[#121216] flex items-start gap-3">
+                <Sparkles className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                <div className="text-zinc-400 leading-relaxed text-xs">
+                  <span className="font-semibold text-zinc-200">Export Pro-Tip:</span> Use <strong>PDF</strong> for executive presentations and customer reports, <strong>PNG</strong> for slides or social sharing, and <strong>SVG</strong> for custom Figma vector editing.
                 </div>
               </div>
             </div>

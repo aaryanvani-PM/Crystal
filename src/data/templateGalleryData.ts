@@ -1,14 +1,15 @@
 import { MinimalInfographicData } from '../types/infographic';
 import { SAMPLE_INFOGRAPHICS } from './sampleInfographics';
 
-export type TemplateCategory = 'All' | 'Business' | 'Tech' | 'Education' | 'Health';
+export type TemplateCategory = 'All' | 'Tech' | 'Health' | 'Business' | 'Science';
 
 export interface TemplateItem {
   id: string;
   sampleIndex: number;
   title: string;
   subtitle: string;
-  category: 'Business' | 'Tech' | 'Education' | 'Health';
+  category: 'Tech' | 'Health' | 'Business' | 'Science';
+  domainEmoji: string;
   subCategory: string;
   archetype: 'stepper-pipeline' | 'scenario-area' | 'dynamic-slider-schedule';
   archetypeLabel: string;
@@ -21,101 +22,14 @@ export interface TemplateItem {
 }
 
 export const TEMPLATES_DATA: TemplateItem[] = [
-  // 1. Business: SaaS Pricing & Churn Cohorts
-  {
-    id: 'template-saas-pricing',
-    sampleIndex: 2,
-    title: 'SaaS Contract Models & Cohort Expansion',
-    subtitle: 'Annual upfront commitments vs monthly rolling subscriptions over 24-month horizon',
-    category: 'Business',
-    subCategory: 'SaaS & Subscriptions',
-    archetype: 'scenario-area',
-    archetypeLabel: 'Scenario Comparison & Crossover',
-    complexity: 'Enterprise',
-    description: 'Models customer lifetime value, Net Revenue Retention (NRR), and logo retention dynamics to present recurring revenue strategy to executive boards.',
-    keyMetrics: [
-      { label: 'Net Revenue Retention', value: '128%' },
-      { label: '24-Mo Cash Flow', value: '$2.84M' },
-      { label: 'Annual Logo Churn', value: '0.8%/mo' },
-    ],
-    tags: ['SaaS', 'NRR', 'MRR', 'LTV', 'Cohort Retention', 'Financial Modeling'],
-    starterPrompt: 'Compare Annual Upfront commitments (-18% discount) vs Monthly Rolling subscriptions over a 24-month horizon showing Net Revenue Retention (128% vs 88%), logo churn, and customer LTV.',
-    data: SAMPLE_INFOGRAPHICS[2],
-  },
-
-  // 2. Business: Stripe Payment Settlement
-  {
-    id: 'template-stripe-settlement',
-    sampleIndex: 11,
-    title: 'Stripe Global Payment Settlement Architecture',
-    subtitle: 'High-volume transaction ledger, distributed idempotency, and ISO 8583 banking rails',
-    category: 'Business',
-    subCategory: 'FinTech & Payments',
-    archetype: 'stepper-pipeline',
-    archetypeLabel: 'Interactive System Architecture Flow',
-    complexity: 'Production-Grade',
-    description: 'End-to-end payment authorization, zero-token vaulting, multi-region idempotent settlement, and immutable double-entry ledger bookkeeping.',
-    keyMetrics: [
-      { label: 'P99 Auth Latency', value: '185ms' },
-      { label: 'Idempotency TTL', value: '24 Hours' },
-      { label: 'Peak Throughput', value: '12,500 TPS' },
-    ],
-    tags: ['FinTech', 'ISO 8583', 'Idempotency', 'Double-Entry', 'PCI Vault', 'Redis'],
-    starterPrompt: 'Architect Stripe global payment settlement engine with client tokenization, distributed Redis idempotency vault, ISO 8583 bank authorization, and immutable double-entry ledger.',
-    data: SAMPLE_INFOGRAPHICS[11],
-  },
-
-  // 3. Business: Smart Order Router Slippage
-  {
-    id: 'template-trading-sor',
-    sampleIndex: 8,
-    title: 'Algorithmic Order Routing & Slippage',
-    subtitle: 'Institutional multi-venue dark pool routing vs single lit exchange fill execution',
-    category: 'Business',
-    subCategory: 'Quantitative Finance',
-    archetype: 'scenario-area',
-    archetypeLabel: 'Scenario Comparison & Crossover',
-    complexity: 'Advanced',
-    description: 'Demonstrates microsecond order slice routing, dark pool hidden liquidity sweeps, and price impact minimization for institutional trade desks.',
-    keyMetrics: [
-      { label: 'Net Slippage Delta', value: '-18.4 bps' },
-      { label: 'Lit Toxicity Shield', value: '94.2%' },
-      { label: 'Order Fill Ratio', value: '98.6%' },
-    ],
-    tags: ['FinTech', 'SOR', 'Dark Pools', 'Slippage', 'Execution Algorithms', 'Market Microstructure'],
-    starterPrompt: 'Compare algorithmic multi-venue dark pool order routing against single lit exchange execution slippage and fill probability for institutional trades.',
-    data: SAMPLE_INFOGRAPHICS[8],
-  },
-
-  // 4. Business: E-Commerce Mobile Checkout Funnel
-  {
-    id: 'template-checkout-pipeline',
-    sampleIndex: 6,
-    title: 'E-Commerce Mobile Checkout Funnel',
-    subtitle: '5-step conversion dropoff optimization from cart reservation to biometric settlement',
-    category: 'Business',
-    subCategory: 'E-Commerce & Conversion',
-    archetype: 'stepper-pipeline',
-    archetypeLabel: 'Interactive Stepper Pipeline',
-    complexity: 'Production-Grade',
-    description: 'Visualizes micro-conversion checkpoints, passkey biometric authentication, and friction elimination in high-growth mobile shopping flows.',
-    keyMetrics: [
-      { label: 'End-to-End Conversion', value: '64.2%' },
-      { label: 'Passkey Auth Speed', value: '450ms' },
-      { label: 'Cart Dropoff Rate', value: '14.8%' },
-    ],
-    tags: ['E-Commerce', 'Checkout', 'Passkeys', 'Conversion Rate', 'Cart Abandonment'],
-    starterPrompt: 'Map a frictionless 5-step mobile checkout funnel from cart item reservation and biometric passkey login to geocoded shipping and 1-click tokenized payment authorization.',
-    data: SAMPLE_INFOGRAPHICS[6],
-  },
-
-  // 5. Tech: Instagram System Design
+  // 1. Tech: Instagram System Design
   {
     id: 'template-instagram-architecture',
     sampleIndex: 9,
     title: 'Instagram Feed Generation & Fan-Out Architecture',
     subtitle: 'High-throughput post distribution to 500M DAU using hybrid push/pull fan-out',
     category: 'Tech',
+    domainEmoji: '💻',
     subCategory: 'System Design & Distributed Systems',
     archetype: 'stepper-pipeline',
     archetypeLabel: 'Interactive System Architecture Flow',
@@ -131,13 +45,14 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[9],
   },
 
-  // 6. Tech: Uber Geospatial Dispatch
+  // 2. Tech: Uber Geospatial Dispatch
   {
     id: 'template-uber-dispatch',
     sampleIndex: 10,
     title: 'Uber Real-Time Geospatial Driver Dispatch Architecture',
     subtitle: 'Sub-second rider-driver matching across Uber H3 hexagonal spatial indexing clusters',
     category: 'Tech',
+    domainEmoji: '💻',
     subCategory: 'Real-Time & Spatial Systems',
     archetype: 'stepper-pipeline',
     archetypeLabel: 'Interactive System Architecture Flow',
@@ -153,13 +68,14 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[10],
   },
 
-  // 7. Tech: Enterprise LLM RAG Pipeline
+  // 3. Tech: Enterprise LLM RAG Pipeline
   {
     id: 'template-rag-pipeline',
     sampleIndex: 12,
     title: 'Enterprise LLM RAG & Hybrid Search Pipeline',
     subtitle: 'Vector embeddings, BM25 sparse keyword fusion, cross-encoder re-ranking, and grounded generation',
     category: 'Tech',
+    domainEmoji: '💻',
     subCategory: 'AI Systems & LLMs',
     archetype: 'stepper-pipeline',
     archetypeLabel: 'Interactive System Architecture Flow',
@@ -175,13 +91,37 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[12],
   },
 
-  // 8. Tech: Edge NPU vs Cloud Inference
+  // 4. Tech: Kafka Event Streaming (NEW)
+  {
+    id: 'template-kafka-streaming',
+    sampleIndex: 14,
+    title: 'Kafka Event-Driven Real-Time Order Stream',
+    subtitle: 'Sub-millisecond event streaming, partition log replication, and exactly-once state processing',
+    category: 'Tech',
+    domainEmoji: '💻',
+    subCategory: 'Streaming Infrastructure',
+    archetype: 'stepper-pipeline',
+    archetypeLabel: 'Interactive System Architecture Flow',
+    complexity: 'Enterprise',
+    description: 'Mission-critical event log with KRaft consensus quorum, Apache Flink stateful sliding windows, and dual OLAP analytical sink materialization.',
+    keyMetrics: [
+      { label: 'Partition Ingestion', value: '180K msgs/s' },
+      { label: 'P99 Gateway Latency', value: '< 1.8ms' },
+      { label: 'Replication Durability', value: '99.999%' },
+    ],
+    tags: ['Kafka', 'Flink', 'KRaft', 'TimescaleDB', 'Event-Driven', 'Stream Processing'],
+    starterPrompt: 'Map Kafka event-driven real-time order streaming architecture across Envoy gateway ingress, partitioned topic log replication with Raft KRaft consensus, Apache Flink stateful aggregations, and dual OLAP analytical sink.',
+    data: SAMPLE_INFOGRAPHICS[14],
+  },
+
+  // 5. Tech: Edge NPU vs Cloud Inference
   {
     id: 'template-edge-ai',
     sampleIndex: 5,
     title: 'Edge On-Device NPU vs Cloud API Inference',
     subtitle: 'Quantized Int4 local execution vs centralized GPU cluster latency and unit economics',
     category: 'Tech',
+    domainEmoji: '💻',
     subCategory: 'AI Systems & Edge Compute',
     archetype: 'scenario-area',
     archetypeLabel: 'Scenario Comparison & Crossover',
@@ -197,13 +137,14 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[5],
   },
 
-  // 9. Tech: Text-to-UI JSON Pipeline
+  // 6. Tech: Text-to-UI JSON Pipeline
   {
     id: 'template-pipeline-architecture',
     sampleIndex: 3,
     title: 'Text-to-UI JSON Pipeline Architecture',
     subtitle: 'Separation of concerns between stochastic LLM reasoning and deterministic React rendering',
     category: 'Tech',
+    domainEmoji: '💻',
     subCategory: 'Software Architecture & Tooling',
     archetype: 'stepper-pipeline',
     archetypeLabel: 'Interactive Stepper Pipeline',
@@ -219,18 +160,19 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[3],
   },
 
-  // 10. Tech: DevOps Deployment Strategy
+  // 7. Tech: DevOps Deployment Strategy
   {
     id: 'template-devops-deployment',
     sampleIndex: 7,
     title: 'Deployment Strategy & Blast Radius Analysis',
     subtitle: 'Progressive canary rollout vs blue-green deploy across 100K active microservices',
     category: 'Tech',
+    domainEmoji: '💻',
     subCategory: 'DevOps & Reliability',
     archetype: 'scenario-area',
     archetypeLabel: 'Scenario Comparison & Crossover',
     complexity: 'Production-Grade',
-    description: 'Evaluates HTTP 5xx error anomalies, MTTR recovery speed, and automated automated canary rollback triggers across production Kubernetes clusters.',
+    description: 'Evaluates HTTP 5xx error anomalies, MTTR recovery speed, and automated canary rollback triggers across production Kubernetes clusters.',
     keyMetrics: [
       { label: 'Mean Time to Recovery', value: '45 seconds' },
       { label: 'Error Anomaly Ceiling', value: '0.04%' },
@@ -241,57 +183,14 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[7],
   },
 
-  // 11. Education & Science: CRISPR Prime Editing
-  {
-    id: 'template-crispr-prime-editing',
-    sampleIndex: 13,
-    title: 'CRISPR Prime Editing vs Standard Cas9 DSB Specificity',
-    subtitle: 'Precision search-and-replace reverse transcription vs double-strand break indel risks',
-    category: 'Education',
-    subCategory: 'Genomics & Molecular Biology',
-    archetype: 'scenario-area',
-    archetypeLabel: 'Scenario Comparison & Crossover',
-    complexity: 'Advanced',
-    description: 'Biomedical research template comparing pegRNA nickase-directed reverse transcription precision against wild-type Cas9 double-strand break chromosome translocations.',
-    keyMetrics: [
-      { label: 'On-Target Efficiency', value: '88%' },
-      { label: 'Translocation Risk', value: '< 0.1%' },
-      { label: 'Precise Edit Ratio', value: '94.2%' },
-    ],
-    tags: ['CRISPR', 'Prime Editing', 'pegRNA', 'Genomics', 'Nickase', 'Bioinformatics'],
-    starterPrompt: 'Compare CRISPR Prime Editing search-and-replace against standard Cas9 blunt double-strand breaks across on-target efficiency (88% vs 62%) and off-target translocation indel safety (<0.1% vs 14.8%).',
-    data: SAMPLE_INFOGRAPHICS[13],
-  },
-
-  // 12. Education & Science: Renewable Grid Storage
-  {
-    id: 'template-grid-storage',
-    sampleIndex: 4,
-    title: 'Renewable Grid Storage Dispatch & Curtailment',
-    subtitle: '7-day solar & wind generation balancing with dynamic lithium-ion battery reserve dispatch',
-    category: 'Education',
-    subCategory: 'Clean Energy & Power Systems',
-    archetype: 'dynamic-slider-schedule',
-    archetypeLabel: 'Dynamic Slider Schedule & Balancer',
-    complexity: 'Production-Grade',
-    description: 'Educational simulation of clean energy grid stability, showing daytime solar peak generation, duck-curve evening peak demand, and battery dispatch buffering.',
-    keyMetrics: [
-      { label: 'Grid Renewable Share', value: '64.5%' },
-      { label: 'Curtailment Saved', value: '412 MWh' },
-      { label: 'P99 Peaker Avoidance', value: '91.8%' },
-    ],
-    tags: ['Solar', 'Wind', 'Battery Storage', 'Duck Curve', 'Grid Balance', 'Clean Energy'],
-    starterPrompt: '7-Day solar and wind balancing schedule with dynamic lithium-ion battery reserve dispatch slider, daytime solar output bars, and evening discharge supply curve.',
-    data: SAMPLE_INFOGRAPHICS[4],
-  },
-
-  // 13. Health & Fitness: Cardio Timing & Substrates
+  // 8. Health: Cardio Timing & Substrates
   {
     id: 'template-cardio-timing',
     sampleIndex: 0,
     title: 'Cardio Timing & Substrate Utilization',
     subtitle: 'Metabolic fuel ratio (% Fat vs % Glycogen) over a 75-minute exercise timeline',
     category: 'Health',
+    domainEmoji: '🏃',
     subCategory: 'Exercise Physiology & Metabolism',
     archetype: 'scenario-area',
     archetypeLabel: 'Scenario Comparison & Crossover',
@@ -307,13 +206,14 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     data: SAMPLE_INFOGRAPHICS[0],
   },
 
-  // 14. Health & Fitness: Weekly Stress & Recovery
+  // 9. Health: Weekly Stress & Recovery
   {
     id: 'template-weekly-stress',
     sampleIndex: 1,
     title: 'Weekly Stress & Fat Oxidation Schedule',
     subtitle: '5-day lifting split with dynamic Zone 2 cardio frequency slider from Mon to Sun',
     category: 'Health',
+    domainEmoji: '🏃',
     subCategory: 'Athletic Training & Periodization',
     archetype: 'dynamic-slider-schedule',
     archetypeLabel: 'Dynamic Slider Schedule & Balancer',
@@ -327,5 +227,212 @@ export const TEMPLATES_DATA: TemplateItem[] = [
     tags: ['Zone 2', 'Hypertrophy', 'Stress Load', 'CNS Recovery', 'Periodization'],
     starterPrompt: '5-Day lifting split + dynamic 45-min Zone 2 cardio frequency schedule from Mon to Sun with an interactive slider for cardio days per week, pink lifting stress bars, yellow cardio stress bars, and cyan fat oxidation curve.',
     data: SAMPLE_INFOGRAPHICS[1],
+  },
+
+  // 10. Health: Hypertrophy Volume vs Systemic Fatigue (NEW)
+  {
+    id: 'template-hypertrophy-volume',
+    sampleIndex: 15,
+    title: 'Hypertrophy Volume vs Systemic Fatigue Curve',
+    subtitle: 'Muscle Protein Synthesis (MPS) stimulus plateau vs central nervous system fatigue across weekly set volume',
+    category: 'Health',
+    domainEmoji: '🏃',
+    subCategory: 'Exercise Physiology & Hypertrophy',
+    archetype: 'scenario-area',
+    archetypeLabel: 'Scenario Comparison & Crossover',
+    complexity: 'Advanced',
+    description: 'Delineates the biological boundary between high-stimulus volume and systemic junk volume, optimizing weekly working sets per muscle group.',
+    keyMetrics: [
+      { label: 'Hypertrophic Stimulus', value: '94.2%' },
+      { label: 'CNS Recovery Index', value: '88.5%' },
+      { label: 'Optimal Weekly Sets', value: '14-18 Sets' },
+    ],
+    tags: ['Hypertrophy', 'MPS Stimulus', 'CNS Fatigue', 'Junk Volume', 'Recovery Curve'],
+    starterPrompt: 'Compare optimal weekly hypertrophy set volume (14-18 sets per muscle group) against excessive junk volume (28-36 sets) showing muscle protein synthesis stimulus plateau and systemic CNS fatigue accumulation curve.',
+    data: SAMPLE_INFOGRAPHICS[15],
+  },
+
+  // 11. Business: SaaS Pricing & Churn Cohorts
+  {
+    id: 'template-saas-pricing',
+    sampleIndex: 2,
+    title: 'SaaS Contract Models & Cohort Expansion',
+    subtitle: 'Annual upfront commitments vs monthly rolling subscriptions over 24-month horizon',
+    category: 'Business',
+    domainEmoji: '💼',
+    subCategory: 'SaaS & Subscriptions',
+    archetype: 'scenario-area',
+    archetypeLabel: 'Scenario Comparison & Crossover',
+    complexity: 'Enterprise',
+    description: 'Models customer lifetime value, Net Revenue Retention (NRR), and logo retention dynamics to present recurring revenue strategy to executive boards.',
+    keyMetrics: [
+      { label: 'Net Revenue Retention', value: '128%' },
+      { label: '24-Mo Cash Flow', value: '$2.84M' },
+      { label: 'Annual Logo Churn', value: '0.8%/mo' },
+    ],
+    tags: ['SaaS', 'NRR', 'MRR', 'LTV', 'Cohort Retention', 'Financial Modeling'],
+    starterPrompt: 'Compare Annual Upfront commitments (-18% discount) vs Monthly Rolling subscriptions over a 24-month horizon showing Net Revenue Retention (128% vs 88%), logo churn, and customer LTV.',
+    data: SAMPLE_INFOGRAPHICS[2],
+  },
+
+  // 12. Business: Stripe Payment Settlement
+  {
+    id: 'template-stripe-settlement',
+    sampleIndex: 11,
+    title: 'Stripe Global Payment Settlement Architecture',
+    subtitle: 'High-volume transaction ledger, distributed idempotency, and ISO 8583 banking rails',
+    category: 'Business',
+    domainEmoji: '💼',
+    subCategory: 'FinTech & Payments',
+    archetype: 'stepper-pipeline',
+    archetypeLabel: 'Interactive System Architecture Flow',
+    complexity: 'Production-Grade',
+    description: 'End-to-end payment authorization, zero-token vaulting, multi-region idempotent settlement, and immutable double-entry ledger bookkeeping.',
+    keyMetrics: [
+      { label: 'P99 Auth Latency', value: '185ms' },
+      { label: 'Idempotency TTL', value: '24 Hours' },
+      { label: 'Peak Throughput', value: '12,500 TPS' },
+    ],
+    tags: ['FinTech', 'ISO 8583', 'Idempotency', 'Double-Entry', 'PCI Vault', 'Redis'],
+    starterPrompt: 'Architect Stripe global payment settlement engine with client tokenization, distributed Redis idempotency vault, ISO 8583 bank authorization, and immutable double-entry ledger.',
+    data: SAMPLE_INFOGRAPHICS[11],
+  },
+
+  // 13. Business: Venture Capital Liquidation Waterfall (NEW)
+  {
+    id: 'template-liquidation-waterfall',
+    sampleIndex: 16,
+    title: 'Venture Capital Cap Table Liquidation Waterfall',
+    subtitle: 'Exit payout distribution between common equity (founders/employees) and preferred stock across valuations',
+    category: 'Business',
+    domainEmoji: '💼',
+    subCategory: 'Venture Finance & Cap Tables',
+    archetype: 'scenario-area',
+    archetypeLabel: 'Scenario Comparison & Crossover',
+    complexity: 'Enterprise',
+    description: 'Dynamic liquidation preference modeling contrasting founder-friendly 1x non-participating preferred against aggressive 2x participating structures.',
+    keyMetrics: [
+      { label: 'Common Payout @ $75M', value: '$45.0M' },
+      { label: 'Series A MOIC', value: '3.75x' },
+      { label: 'Common Retention', value: '60.0%' },
+    ],
+    tags: ['Cap Table', 'Liquidation Preference', 'Venture Capital', 'Common Equity', 'Exit Waterfall'],
+    starterPrompt: 'Compare startup venture capital liquidation waterfall for 1x Non-Participating Preferred vs 2x Participating Preferred with no cap across exit valuations from $10M to $130M showing common shareholder payout vs preferred recovery.',
+    data: SAMPLE_INFOGRAPHICS[16],
+  },
+
+  // 14. Business: Smart Order Router Slippage
+  {
+    id: 'template-trading-sor',
+    sampleIndex: 8,
+    title: 'Algorithmic Order Routing & Slippage',
+    subtitle: 'Institutional multi-venue dark pool routing vs single lit exchange fill execution',
+    category: 'Business',
+    domainEmoji: '💼',
+    subCategory: 'Quantitative Finance',
+    archetype: 'scenario-area',
+    archetypeLabel: 'Scenario Comparison & Crossover',
+    complexity: 'Advanced',
+    description: 'Demonstrates microsecond order slice routing, dark pool hidden liquidity sweeps, and price impact minimization for institutional trade desks.',
+    keyMetrics: [
+      { label: 'Net Slippage Delta', value: '-18.4 bps' },
+      { label: 'Lit Toxicity Shield', value: '94.2%' },
+      { label: 'Order Fill Ratio', value: '98.6%' },
+    ],
+    tags: ['FinTech', 'SOR', 'Dark Pools', 'Slippage', 'Execution Algorithms', 'Market Microstructure'],
+    starterPrompt: 'Compare algorithmic multi-venue dark pool order routing against single lit exchange execution slippage and fill probability for institutional trades.',
+    data: SAMPLE_INFOGRAPHICS[8],
+  },
+
+  // 15. Business: E-Commerce Mobile Checkout Funnel
+  {
+    id: 'template-checkout-pipeline',
+    sampleIndex: 6,
+    title: 'E-Commerce Mobile Checkout Funnel',
+    subtitle: '5-step conversion dropoff optimization from cart reservation to biometric settlement',
+    category: 'Business',
+    domainEmoji: '💼',
+    subCategory: 'E-Commerce & Conversion',
+    archetype: 'stepper-pipeline',
+    archetypeLabel: 'Interactive Stepper Pipeline',
+    complexity: 'Production-Grade',
+    description: 'Visualizes micro-conversion checkpoints, passkey biometric authentication, and friction elimination in high-growth mobile shopping flows.',
+    keyMetrics: [
+      { label: 'End-to-End Conversion', value: '64.2%' },
+      { label: 'Passkey Auth Speed', value: '450ms' },
+      { label: 'Cart Dropoff Rate', value: '14.8%' },
+    ],
+    tags: ['E-Commerce', 'Checkout', 'Passkeys', 'Conversion Rate', 'Cart Abandonment'],
+    starterPrompt: 'Map a frictionless 5-step mobile checkout funnel from cart item reservation and biometric passkey login to geocoded shipping and 1-click tokenized payment authorization.',
+    data: SAMPLE_INFOGRAPHICS[6],
+  },
+
+  // 16. Science: CRISPR Prime Editing
+  {
+    id: 'template-crispr-prime-editing',
+    sampleIndex: 13,
+    title: 'CRISPR Prime Editing vs Standard Cas9 DSB Specificity',
+    subtitle: 'Precision search-and-replace reverse transcription vs double-strand break indel risks',
+    category: 'Science',
+    domainEmoji: '🔬',
+    subCategory: 'Genomics & Molecular Biology',
+    archetype: 'scenario-area',
+    archetypeLabel: 'Scenario Comparison & Crossover',
+    complexity: 'Advanced',
+    description: 'Biomedical research template comparing pegRNA nickase-directed reverse transcription precision against wild-type Cas9 double-strand break chromosome translocations.',
+    keyMetrics: [
+      { label: 'On-Target Efficiency', value: '88%' },
+      { label: 'Translocation Risk', value: '< 0.1%' },
+      { label: 'Precise Edit Ratio', value: '94.2%' },
+    ],
+    tags: ['CRISPR', 'Prime Editing', 'pegRNA', 'Genomics', 'Nickase', 'Bioinformatics'],
+    starterPrompt: 'Compare CRISPR Prime Editing search-and-replace against standard Cas9 blunt double-strand breaks across on-target efficiency (88% vs 62%) and off-target translocation indel safety (<0.1% vs 14.8%).',
+    data: SAMPLE_INFOGRAPHICS[13],
+  },
+
+  // 17. Science: Renewable Grid Storage
+  {
+    id: 'template-grid-storage',
+    sampleIndex: 4,
+    title: 'Renewable Grid Storage Dispatch & Curtailment',
+    subtitle: '7-day solar & wind generation balancing with dynamic lithium-ion battery reserve dispatch',
+    category: 'Science',
+    domainEmoji: '🔬',
+    subCategory: 'Clean Energy & Power Systems',
+    archetype: 'dynamic-slider-schedule',
+    archetypeLabel: 'Dynamic Slider Schedule & Balancer',
+    complexity: 'Production-Grade',
+    description: 'Educational simulation of clean energy grid stability, showing daytime solar peak generation, duck-curve evening peak demand, and battery dispatch buffering.',
+    keyMetrics: [
+      { label: 'Grid Renewable Share', value: '64.5%' },
+      { label: 'Curtailment Saved', value: '412 MWh' },
+      { label: 'P99 Peaker Avoidance', value: '91.8%' },
+    ],
+    tags: ['Solar', 'Wind', 'Battery Storage', 'Duck Curve', 'Grid Balance', 'Clean Energy'],
+    starterPrompt: '7-Day solar and wind balancing schedule with dynamic lithium-ion battery reserve dispatch slider, daytime solar output bars, and evening discharge supply curve.',
+    data: SAMPLE_INFOGRAPHICS[4],
+  },
+
+  // 18. Science: mRNA Vaccine Delivery (NEW)
+  {
+    id: 'template-mrna-vaccine',
+    sampleIndex: 17,
+    title: 'mRNA Lipid Nanoparticle Delivery & Immune Cascade',
+    subtitle: 'Cellular endocytosis, ribosomal antigen translation, and dual humoral/cytotoxic immune activation',
+    category: 'Science',
+    domainEmoji: '🔬',
+    subCategory: 'Biotechnology & Immunology',
+    archetype: 'stepper-pipeline',
+    archetypeLabel: 'Interactive Stepper Pipeline',
+    complexity: 'Advanced',
+    description: 'Biochemical kinetics of lipid nanoparticle cellular uptake, proton-sponge endosomal escape, pseudouridine spike synthesis, and memory B/T cell surge.',
+    keyMetrics: [
+      { label: 'Endosomal Escape', value: '84% Yield' },
+      { label: 'Translation Rate', value: '1.2K spikes/min' },
+      { label: 'Neutralizing Titers', value: '95% In Vitro' },
+    ],
+    tags: ['mRNA', 'Nanoparticles', 'Immunology', 'Ribosomes', 'Spike Protein', 'Biotech'],
+    starterPrompt: 'Model mRNA vaccine lipid nanoparticle cellular delivery and immune activation cascade across endosomal escape, ribosomal spike protein synthesis, dendritic cell MHC presentation, and long-term neutralizing antibody memory.',
+    data: SAMPLE_INFOGRAPHICS[17],
   },
 ];

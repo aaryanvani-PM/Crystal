@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MinimalInfographicData, InfographicCardType } from '../types/infographic';
-import { X, Sparkles, Sliders, Send, Loader2 } from 'lucide-react';
+import { X, Sparkles, Sliders, Send, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface Props {
   onChange: (updated: MinimalInfographicData) => void;
   onAiRefine: (instruction: string) => Promise<void>;
   isAiRefining: boolean;
+  onReset?: () => void;
 }
 
 export const LiveEditorDrawer: React.FC<Props> = ({
@@ -18,6 +19,7 @@ export const LiveEditorDrawer: React.FC<Props> = ({
   onChange,
   onAiRefine,
   isAiRefining,
+  onReset,
 }) => {
   const [aiInstruction, setAiInstruction] = useState('');
 
@@ -150,6 +152,28 @@ export const LiveEditorDrawer: React.FC<Props> = ({
               )}
             </button>
           </form>
+        </div>
+
+        {/* Local Storage Persistence & Reset Bar */}
+        <div className="pt-4 border-t border-zinc-800/80 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between text-[11px] text-zinc-400">
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Auto-saved to local storage</span>
+            </div>
+            <span className="text-[10px] text-zinc-500 font-mono">Protected from refresh</span>
+          </div>
+
+          {onReset && (
+            <button
+              type="button"
+              onClick={onReset}
+              className="w-full py-2 px-3 rounded-xl border border-zinc-800 bg-[#161619] hover:bg-zinc-800 text-zinc-400 hover:text-white text-[11px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3 text-zinc-400" />
+              <span>Reset to default template</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
